@@ -116,6 +116,23 @@ const AdminDashboard = () => {
   // Backup data
   const [backups, setBackups] = useState([]);
 
+  // Pending orders data
+  const [pendingOrders, setPendingOrders] = useState([]);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedSale, setSelectedSale] = useState(null);
+  const [paymentAmount, setPaymentAmount] = useState('');
+
+  // Brands data
+  const [brands, setBrands] = useState([]);
+  const [newBrand, setNewBrand] = useState('');
+
+  // Customer purchase history
+  const [customerHistory, setCustomerHistory] = useState([]);
+  const [showCustomerHistoryModal, setShowCustomerHistoryModal] = useState(false);
+
+  // Product search
+  const [productSearchTerm, setProductSearchTerm] = useState('');
+
 
   // Load all essential data when component mounts
   useEffect(() => {
@@ -130,7 +147,9 @@ const AdminDashboard = () => {
           fetchCustomers(),
           fetchSalesReports(1, 50),
           fetchSettings(),
-          fetchBackups()
+          fetchBackups(),
+          fetchPendingOrders(),
+          fetchBrands()
         ]);
       } catch (error) {
         console.error('Error loading initial data:', error);
@@ -252,6 +271,56 @@ const AdminDashboard = () => {
       setBackups(response.data || []);
     } catch (error) {
       toast.error('Failed to load backups');
+    }
+  };
+
+  const fetchPendingOrders = async () => {
+    try {
+      const response = await axios.get('/api/sales/pending');
+      setPendingOrders(response.data || []);
+    } catch (error) {
+      console.error('Failed to load pending orders:', error);
+    }
+  };
+
+  const fetchBrands = async () => {
+    try {
+      const response = await axios.get('/api/brands');
+      setBrands(response.data || []);
+    } catch (error) {
+      console.error('Failed to load brands:', error);
+    }
+  };
+
+  const fetchCustomerHistory = async (customerId) => {
+    try {
+      const response = await axios.get(`/api/sales?customer_id=${customerId}`);
+      setCustomerHistory(response.data.sales || []);
+      setShowCustomerHistoryModal(true);
+    } catch (error) {
+      toast.error('Failed to load customer history');
+    }
+  };
+
+  const handleAddPayment = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await axios.post('/api/payments', {
+        sale_id: selectedSale.id,
+        amount: parseFloat(paymentAmount),
+        payment_method: 'cash',
+        notes: 'Payment added by admin'
+      });
+      toast.success('Payment added successfully');
+      setShowPaymentModal(false);
+      setPaymentAmount('');
+      setSelectedSale(null);
+      fetchPendingOrders();
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to add payment');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -721,6 +790,13 @@ const AdminDashboard = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => fetchCustomerHistory(customer.id)}
+                        className="text-green-600 hover:text-green-900"
+                        title="View Purchase History"
+                      >
+                        <History className="w-4 h-4" />
+                      </button>
                       <button
                         onClick={() => openCustomerModal(customer)}
                         className="text-blue-600 hover:text-blue-900"
@@ -1291,7 +1367,15 @@ const AdminDashboard = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">{formatCurrency(order.amount_paid)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-red-600">{formatCurrency(order.total_amount - order.amount_paid)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button className="text-blue-600 hover:text-blue-900">Verify Payment</button>
+                        <button
+                          onClick={() => {
+                            setSelectedSale(order);
+                            setShowPaymentModal(true);
+                          }}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          Add Payment
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1859,50 +1943,24 @@ const AdminDashboard = () => {
               </label>
               <select
                 value={productForm.brand}
-                onChange={(e) => setProductForm({ ...productForm, brand: e.target.value })}
+                onChange={(e) => {
+                  if (e.target.value === '__ADD_NEW__') {
+                    const brandName = prompt('Enter new brand name:');
+                    if (brandName && brandName.trim()) {
+                      setBrands([...brands, brandName.trim()]);
+                      setProductForm({ ...productForm, brand: brandName.trim() });
+                    }
+                  } else {
+                    setProductForm({ ...productForm, brand: e.target.value });
+                  }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Select Brand</option>
-                <option value="Michelin">Michelin</option>
-                <option value="Bridgestone">Bridgestone</option>
-                <option value="Continental">Continental</option>
-                <option value="Goodyear">Goodyear</option>
-                <option value="Pirelli">Pirelli</option>
-                <option value="Dunlop">Dunlop</option>
-                <option value="Yokohama">Yokohama</option>
-                <option value="Hankook">Hankook</option>
-                <option value="Kumho">Kumho</option>
-                <option value="Toyo">Toyo</option>
-                <option value="Falken">Falken</option>
-                <option value="Nitto">Nitto</option>
-                <option value="General">General</option>
-                <option value="Cooper">Cooper</option>
-                <option value="BFGoodrich">BFGoodrich</option>
-                <option value="Firestone">Firestone</option>
-                <option value="Mobil 1">Mobil 1</option>
-                <option value="Castrol">Castrol</option>
-                <option value="Pennzoil">Pennzoil</option>
-                <option value="Valvoline">Valvoline</option>
-                <option value="Fram">Fram</option>
-                <option value="Bosch">Bosch</option>
-                <option value="WIX">WIX</option>
-                <option value="K&N">K&N</option>
-                <option value="Raybestos">Raybestos</option>
-                <option value="Wagner">Wagner</option>
-                <option value="Akebono">Akebono</option>
-                <option value="Power Stop">Power Stop</option>
-                <option value="Meguiars">Meguiars</option>
-                <option value="Chemical Guys">Chemical Guys</option>
-                <option value="Armor All">Armor All</option>
-                <option value="Rain-X">Rain-X</option>
-                <option value="Prestone">Prestone</option>
-                <option value="Zerex">Zerex</option>
-                <option value="Peak">Peak</option>
-                <option value="American Racing">American Racing</option>
-                <option value="Fuel">Fuel</option>
-                <option value="Method">Method</option>
-                <option value="Generic">Generic</option>
-                <option value="Other">Other</option>
+                {brands.map(brand => (
+                  <option key={brand} value={brand}>{brand}</option>
+                ))}
+                <option value="__ADD_NEW__">+ Add New Brand</option>
               </select>
             </div>
 
@@ -2032,6 +2090,131 @@ const AdminDashboard = () => {
     );
   }
 
+  // Payment Modal for Pending Orders
+  const renderPaymentModal = () => (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      style={{ display: showPaymentModal ? 'flex' : 'none' }}
+    >
+      <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h3 className="text-lg font-semibold text-gray-900">Add Payment</h3>
+          <button
+            onClick={() => {
+              setShowPaymentModal(false);
+              setPaymentAmount('');
+              setSelectedSale(null);
+            }}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleAddPayment} className="p-6 space-y-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Order ID: #{selectedSale?.id}</p>
+            <p className="text-sm text-gray-600">Total: {formatCurrency(selectedSale?.total_amount)}</p>
+            <p className="text-sm text-gray-600">Paid: {formatCurrency(selectedSale?.amount_paid)}</p>
+            <p className="text-lg font-bold text-gray-900 mt-2">
+              Balance: {formatCurrency((selectedSale?.total_amount || 0) - (selectedSale?.amount_paid || 0))}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Payment Amount *
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              required
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value)}
+              placeholder="Enter payment amount"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setShowPaymentModal(false);
+                setPaymentAmount('');
+                setSelectedSale(null);
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? 'Processing...' : 'Add Payment'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+
+  // Customer History Modal
+  const renderCustomerHistoryModal = () => (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      style={{ display: showCustomerHistoryModal ? 'flex' : 'none' }}
+    >
+      <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h3 className="text-lg font-semibold text-gray-900">Customer Purchase History</h3>
+          <button
+            onClick={() => setShowCustomerHistoryModal(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {customerHistory.length > 0 ? (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {customerHistory.map((sale) => (
+                  <tr key={sale.id}>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {new Date(sale.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">#{sale.id}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(sale.total_amount)}</td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${sale.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                        {sale.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-center text-gray-500 py-8">No purchase history found.</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
       {/* Sidebar */}
@@ -2093,6 +2276,8 @@ const AdminDashboard = () => {
       {renderCustomerModal()}
       {renderProductHistoryModal()}
       {renderImportModal()}
+      {renderPaymentModal()}
+      {renderCustomerHistoryModal()}
     </div>
   );
 };

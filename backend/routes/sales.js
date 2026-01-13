@@ -667,6 +667,38 @@ router.get('/test', authenticateToken, requireAdmin, async (req, res) => {
     }
 });
 
+// Get pending sales (for dashboard)
+router.get('/pending', authenticateToken, requireCashier, async (req, res) => {
+    try {
+        const db = new Database();
+        const user = req.user;
+
+        let sql = `
+            SELECT s.*, u.full_name as cashier_name, c.name as customer_name,
+                   (s.total_amount - s.amount_paid) as balance_due
+            FROM sales s
+            JOIN users u ON s.cashier_id = u.id
+            LEFT JOIN customers c ON s.customer_id = c.id
+            WHERE s.status = 'pending'
+        `;
+        let params = [];
+
+        // Non-admin users can only see their own pending sales
+        if (user.role !== 'admin') {
+            sql += ' AND s.cashier_id = ?';
+            params.push(user.id);
+        }
+
+        sql += ' ORDER BY s.created_at DESC';
+
+        const pendingSales = await db.query(sql, params);
+        res.json(pendingSales);
+    } catch (error) {
+        console.error('Get pending sales error:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Get product history (who bought it, when, how many)
 router.get('/product/:id', authenticateToken, requireAdmin, async (req, res) => {
     try {

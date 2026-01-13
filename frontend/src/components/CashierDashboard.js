@@ -48,6 +48,8 @@ const CashierDashboard = () => {
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [isPartialPayment, setIsPartialPayment] = useState(false);
   const [amountPaid, setAmountPaid] = useState('');
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '', address: '' });
 
   // Currency formatting helper
   const formatCurrency = (amount) => {
@@ -162,6 +164,28 @@ const CashierDashboard = () => {
     }
   };
 
+  const handleAddCustomer = async (e) => {
+    e.preventDefault();
+    if (!newCustomer.name.trim()) {
+      toast.error('Customer name is required');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await axios.post('/api/customers', newCustomer);
+      toast.success('Customer added successfully!');
+      setCustomers([...customers, response.data]);
+      setSelectedCustomerId(response.data.id);
+      setShowAddCustomerModal(false);
+      setNewCustomer({ name: '', phone: '', email: '', address: '' });
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to add customer');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleBarcodeSubmit = async (e) => {
     e.preventDefault();
     if (!barcode.trim()) return;
@@ -210,8 +234,12 @@ const CashierDashboard = () => {
   const addToCart = (product, customPrice = null) => {
     const existingItem = cart.find(item => item.id === product.id);
 
-    // Apply custom price if admin override is active
-    const finalPrice = customPrice || (adminOverride && manualPrice ? parseFloat(manualPrice) : product.price);
+    // Role-based pricing: only admin can use custom prices
+    // Cashiers can only use custom prices if admin override is active
+    const canEditPrice = user.role === 'admin' || adminOverride;
+    const finalPrice = (canEditPrice && (customPrice || manualPrice))
+      ? parseFloat(customPrice || manualPrice)
+      : product.price;
     const productWithPrice = { ...product, price: finalPrice };
 
     if (existingItem) {
@@ -228,8 +256,8 @@ const CashierDashboard = () => {
       setCart([...cart, { ...productWithPrice, quantity: 1 }]);
     }
 
-    if (adminOverride && (customPrice || manualPrice)) {
-      toast.success(`Added ${product.name} with override price $${finalPrice}`);
+    if (canEditPrice && (customPrice || manualPrice)) {
+      toast.success(`Added ${product.name} with custom price ${formatCurrency(finalPrice)}`);
     } else {
       toast.success(`Added ${product.name} to cart`);
     }
@@ -267,7 +295,9 @@ const CashierDashboard = () => {
 
   const calculateTotal = () => {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const discountAmount = adminOverride ? (subtotal * (overrideDiscount / 100)) : 0;
+    // Only admin can apply discounts (or cashier with admin override)
+    const canApplyDiscount = user.role === 'admin' || adminOverride;
+    const discountAmount = canApplyDiscount ? (subtotal * (overrideDiscount / 100)) : 0;
     const afterDiscount = subtotal - discountAmount;
     const vatRate = parseFloat(settings.vat_rate?.value || settings.tax_rate?.value || 12) / 100;
     const vat = afterDiscount * vatRate;
@@ -564,10 +594,10 @@ const CashierDashboard = () => {
                 </button>
               </form>
 
-              {adminOverride && (
+              {(user.role === 'admin' || adminOverride) && (
                 <div className="pos-override-panel">
                   <h4 className="font-bold text-orange-800 mb-3 flex items-center gap-2">
-                    🔓 Admin Override Active
+                    🔓 {user.role === 'admin' ? 'Admin Pricing Controls' : 'Admin Override Active'}
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -593,16 +623,33 @@ const CashierDashboard = () => {
                       />
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      setAdminOverride(false);
-                      setOverrideDiscount(0);
-                      setManualPrice('');
-                    }}
-                    className="mt-3 px-4 py-2 bg-white border border-orange-300 rounded-lg text-orange-800 font-medium hover:bg-orange-50 transition-colors"
-                  >
-                    Disable Override
-                  </button>
+                  {adminOverride && user.role !== 'admin' && (
+                    <button
+                      onClick={() => {
+                        setAdminOverride(false);
+                        setOverrideDiscount(0);
+                        setManualPrice('');
+                      }}
+                      className="mt-3 px-4 py-2 bg-white border border-orange-300 rounded-lg text-orange-800 font-medium hover:bg-orange-50 transition-colors"
+                    >
+                      Disable Override
+                    </button>
+                  )}
+                  {user.role === 'admin' && (
+                    <p className="mt-3 text-sm text-orange-700">
+                      ✓ Admin account - full pricing control enabled
+                    </p>
+                  )}
+                </div>
+              )}
+              {user.role === 'cashier' && !adminOverride && (
+                <div className="pos-override-panel bg-gray-100">
+                  <h4 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+                    🔒 Cashier Account
+                  </h4>
+                  <p className="text-sm text-gray-600">
+                    Price editing and discounts are restricted. Scan barcode ADMIN_OVERRIDE_2024 to enable admin override.
+                  </p>
                 </div>
               )}
             </div>
@@ -838,16 +885,25 @@ const CashierDashboard = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Customer (Optional)
                 </label>
-                <select
-                  value={selectedCustomerId}
-                  onChange={(e) => setSelectedCustomerId(e.target.value)}
-                  className="form-input"
-                >
-                  <option value="">Walk-in Customer</option>
-                  {customers.map(c => (
-                    <option key={c.id} value={c.id}>{c.name} ({c.phone || 'No phone'})</option>
-                  ))}
-                </select>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedCustomerId}
+                    onChange={(e) => setSelectedCustomerId(e.target.value)}
+                    className="form-input flex-1"
+                  >
+                    <option value="">Walk-in Customer</option>
+                    {customers.map(c => (
+                      <option key={c.id} value={c.id}>{c.name} ({c.phone || 'No phone'})</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCustomerModal(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+                  >
+                    + Add New
+                  </button>
+                </div>
               </div>
 
               {/* Partial Payment Toggle */}
@@ -1291,6 +1347,94 @@ const CashierDashboard = () => {
               <p className="text-center text-gray-500 py-8">No sales history found for this product.</p>
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Add Customer Modal */}
+      <div
+        className="modal-overlay"
+        style={{ display: showAddCustomerModal ? 'flex' : 'none' }}
+      >
+        <div className="modal-content" style={{ maxWidth: '500px' }}>
+          <div className="modal-header">
+            <h3 className="modal-title">Add New Customer</h3>
+            <button
+              onClick={() => {
+                setShowAddCustomerModal(false);
+                setNewCustomer({ name: '', phone: '', email: '', address: '' });
+              }}
+              className="modal-close"
+            >
+              ×
+            </button>
+          </div>
+
+          <form onSubmit={handleAddCustomer} className="space-y-4">
+            <div className="form-group">
+              <label className="form-label">Customer Name *</label>
+              <input
+                type="text"
+                required
+                value={newCustomer.name}
+                onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                placeholder="Enter customer name"
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Phone Number</label>
+              <input
+                type="tel"
+                value={newCustomer.phone}
+                onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                placeholder="Enter phone number"
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Email</label>
+              <input
+                type="email"
+                value={newCustomer.email}
+                onChange={(e) => setNewCustomer({ ...newCustomer, email: e.target.value })}
+                placeholder="Enter email address"
+                className="form-input"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Address</label>
+              <textarea
+                value={newCustomer.address}
+                onChange={(e) => setNewCustomer({ ...newCustomer, address: e.target.value })}
+                placeholder="Enter address"
+                className="form-input"
+                rows="3"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowAddCustomerModal(false);
+                  setNewCustomer({ name: '', phone: '', email: '', address: '' });
+                }}
+                className="btn btn-outline flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn btn-primary flex-1"
+              >
+                {loading ? 'Adding...' : 'Add Customer'}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </>

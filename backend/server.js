@@ -12,6 +12,8 @@ const userRoutes = require('./routes/users');
 const settingsRoutes = require('./routes/settings');
 const backupRoutes = require('./routes/backup');
 const customerRoutes = require('./routes/customers');
+const paymentRoutes = require('./routes/payments');
+const brandRoutes = require('./routes/brands');
 
 // Import middleware
 const { authenticateToken } = require('./middleware/auth');
@@ -35,6 +37,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/backup', backupRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/brands', brandRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
