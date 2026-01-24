@@ -100,7 +100,8 @@ const AdminDashboard = () => {
   const [userForm, setUserForm] = useState({
     username: '',
     password: '',
-    role: 'cashier'
+    role: 'cashier',
+    full_name: ''
   });
 
   // Settings data
@@ -160,6 +161,13 @@ const AdminDashboard = () => {
 
     loadInitialData();
   }, []); // Empty dependency array - run once on mount
+
+  // Apply user theme color
+  useEffect(() => {
+    if (user?.theme_color) {
+      document.documentElement.style.setProperty('--theme-color', user.theme_color);
+    }
+  }, [user]);
 
   // Load tab-specific data when switching tabs
   useEffect(() => {
@@ -357,14 +365,16 @@ const AdminDashboard = () => {
       setUserForm({
         username: user.username || '',
         password: '',
-        role: user.role || 'cashier'
+        role: user.role || 'cashier',
+        full_name: user.full_name || ''
       });
     } else {
       setEditingUser(null);
       setUserForm({
         username: '',
         password: '',
-        role: 'cashier'
+        role: 'cashier',
+        full_name: ''
       });
     }
     setShowUserModal(true);
@@ -376,10 +386,19 @@ const AdminDashboard = () => {
 
     try {
       if (editingUser) {
-        const updateData = { role: userForm.role };
-        if (userForm.password) {
-          updateData.password = userForm.password;
+        const updateData = {
+          role: userForm.role,
+          full_name: userForm.full_name,
+          username: userForm.username
+        };
+
+        // Handle password change separately if provided
+        if (userForm.password && userForm.password.trim()) {
+          await axios.post(`/api/users/${editingUser.id}/reset-password`, {
+            new_password: userForm.password
+          });
         }
+
         await axios.put(`/api/users/${editingUser.id}`, updateData);
         toast.success('User updated successfully');
       } else {
@@ -707,6 +726,19 @@ const AdminDashboard = () => {
               required={!editingUser}
               value={userForm.password}
               onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Full Name
+            </label>
+            <input
+              type="text"
+              value={userForm.full_name}
+              onChange={(e) => setUserForm({ ...userForm, full_name: e.target.value })}
+              placeholder="Enter full name"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
@@ -1535,9 +1567,7 @@ const AdminDashboard = () => {
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Brand</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Size/Type</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Price</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Cost</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Stock</th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Min Stock</th>
                 <th className="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -1564,9 +1594,6 @@ const AdminDashboard = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
                     {formatCurrency(product.price)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600">
-                    {product.cost ? formatCurrency(product.cost) : 'N/A'}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <span className={`text-sm font-bold ${product.stock <= (product.min_stock || 5) ? 'text-red-600' : 'text-gray-900'
@@ -1577,9 +1604,6 @@ const AdminDashboard = () => {
                         <AlertTriangle className="w-4 h-4 text-red-500 ml-2" />
                       )}
                     </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-600">
-                    {product.min_stock || 5}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <div className="flex items-center space-x-3">

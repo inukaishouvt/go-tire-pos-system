@@ -38,6 +38,7 @@ const CashierDashboard = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [adminOverride, setAdminOverride] = useState(false);
   const [overrideDiscount, setOverrideDiscount] = useState(0);
+  const [discountType, setDiscountType] = useState('percentage'); // 'percentage' or 'fixed'
   const [manualPrice, setManualPrice] = useState('');
   const [settings, setSettings] = useState({});
   const barcodeInputRef = useRef(null);
@@ -46,10 +47,12 @@ const CashierDashboard = () => {
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
   const [isPartialPayment, setIsPartialPayment] = useState(false);
   const [amountPaid, setAmountPaid] = useState('');
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '', address: '' });
+  const [isVatExempt, setIsVatExempt] = useState(false);
 
   // Currency formatting helper
   const formatCurrency = (amount) => {
@@ -141,7 +144,10 @@ const CashierDashboard = () => {
 
   const fetchSalesHistory = async (page = 1, limit = 20) => {
     try {
-      const response = await axios.get(`/api/sales?page=${page}&limit=${limit}`);
+      const today = new Date().toISOString().split('T')[0];
+      let queryParams = `page=${page}&limit=${limit}&start_date=${today}&end_date=${today}`;
+      if (user.role !== 'admin') queryParams += `&cashier_id=${user.id}`;
+      const response = await axios.get(`/api/sales?${queryParams}`);
       setSalesHistory(response.data.sales || []);
       if (response.data.pagination) {
         setSalesPagination(response.data.pagination);
@@ -297,9 +303,22 @@ const CashierDashboard = () => {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     // Only admin can apply discounts (or cashier with admin override)
     const canApplyDiscount = user.role === 'admin' || adminOverride;
-    const discountAmount = canApplyDiscount ? (subtotal * (overrideDiscount / 100)) : 0;
+
+    // Calculate discount based on type
+    let discountAmount = 0;
+    if (canApplyDiscount && overrideDiscount > 0) {
+      if (discountType === 'percentage') {
+        discountAmount = subtotal * (overrideDiscount / 100);
+      } else {
+        // Fixed amount discount
+        discountAmount = Math.min(overrideDiscount, subtotal); // Can't discount more than subtotal
+      }
+    }
+
     const afterDiscount = subtotal - discountAmount;
-    const vatRate = parseFloat(settings.vat_rate?.value || settings.tax_rate?.value || 12) / 100;
+
+    // VAT calculation - exempt if admin sets VAT exempt
+    const vatRate = (isVatExempt && user.role === 'admin') ? 0 : parseFloat(settings.vat_rate?.value || settings.tax_rate?.value || 12) / 100;
     const vat = afterDiscount * vatRate;
     const total = afterDiscount + vat;
     return {
@@ -307,6 +326,7 @@ const CashierDashboard = () => {
       discount: discountAmount.toFixed(2),
       vat: vat.toFixed(2),
       total: total.toFixed(2),
+      discountType,
       vatRate: (vatRate * 100).toFixed(1)
     };
   };
@@ -317,8 +337,19 @@ const CashierDashboard = () => {
       return;
     }
 
+    // Validate customer selection
+    if (!selectedCustomerId) {
+      toast.error('Please select a customer or add a new customer');
+      return;
+    }
+
     const totals = calculateTotal();
     const paymentAmount = parseFloat(paymentReceived) || 0;
+
+    if (paymentMethod === 'cash' && !paymentReceived) {
+      toast.error('Please enter amount received');
+      return;
+    }
 
     if (paymentMethod === 'cash' && paymentAmount < parseFloat(totals.total)) {
       toast.error('Insufficient payment amount');
@@ -612,10 +643,26 @@ const CashierDashboard = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-orange-800 mb-1">Discount %</label>
+                      <label className="block text-sm font-medium text-orange-800 mb-1">Discount Type</label>
+                      <select
+                        value={discountType}
+                        onChange={(e) => {
+                          setDiscountType(e.target.value);
+                          setOverrideDiscount(0);
+                        }}
+                        className="w-full px-3 py-2 border border-orange-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                      >
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="fixed">Fixed Amount (₱)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-orange-800 mb-1">
+                        {discountType === 'percentage' ? 'Discount %' : 'Discount Amount (₱)'}
+                      </label>
                       <input
                         type="number"
-                        step="0.1"
+                        step={discountType === 'percentage' ? '0.1' : '0.01'}
                         value={overrideDiscount}
                         onChange={(e) => setOverrideDiscount(parseFloat(e.target.value) || 0)}
                         placeholder="0"
@@ -784,7 +831,9 @@ const CashierDashboard = () => {
                   </div>
                   {adminOverride && parseFloat(totals.discount) > 0 && (
                     <div className="flex justify-between mb-3 text-lg text-orange-600">
-                      <span className="font-medium">Discount ({overrideDiscount}%):</span>
+                      <span className="font-medium">
+                        Discount {totals.discountType === 'percentage' ? `(${overrideDiscount}%)` : '(Fixed)'}:
+                      </span>
                       <span className="font-semibold">-{formatCurrency(totals.discount)}</span>
                     </div>
                   )}
@@ -866,6 +915,24 @@ const CashierDashboard = () => {
               {paymentMethod === 'cash' && (
                 <div className="form-group">
                   <label className="form-label">Amount Received</label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <input
+                      type="checkbox"
+                      id="exactAmount"
+                      checked={paymentReceived === totals.total.toString()}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setPaymentReceived(totals.total.toString());
+                        } else {
+                          setPaymentReceived('');
+                        }
+                      }}
+                      className="w-4 h-4"
+                    />
+                    <label htmlFor="exactAmount" className="text-sm text-gray-700">
+                      Exact Amount
+                    </label>
+                  </div>
                   <input
                     type="number"
                     step="0.01"
@@ -883,19 +950,33 @@ const CashierDashboard = () => {
               {/* Customer Selection */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Customer (Optional)
+                  Customer *
                 </label>
                 <div className="flex gap-2">
-                  <select
-                    value={selectedCustomerId}
-                    onChange={(e) => setSelectedCustomerId(e.target.value)}
-                    className="form-input flex-1"
-                  >
-                    <option value="">Walk-in Customer</option>
-                    {customers.map(c => (
-                      <option key={c.id} value={c.id}>{c.name} ({c.phone || 'No phone'})</option>
-                    ))}
-                  </select>
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      placeholder="Search customer..."
+                      value={customerSearchTerm}
+                      onChange={(e) => setCustomerSearchTerm(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <select
+                      value={selectedCustomerId}
+                      onChange={(e) => setSelectedCustomerId(e.target.value)}
+                      className="form-input w-full"
+                    >
+                      <option value="">Walk-in Customer</option>
+                      {customers
+                        .filter(c =>
+                          c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+                          (c.phone && c.phone.includes(customerSearchTerm))
+                        )
+                        .map(c => (
+                          <option key={c.id} value={c.id}>{c.name} ({c.phone || 'No phone'})</option>
+                        ))}
+                    </select>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setShowAddCustomerModal(true)}
@@ -936,6 +1017,21 @@ const CashierDashboard = () => {
                   <p className="text-sm text-blue-700 mt-2 font-medium">
                     Balance Remaining: {formatCurrency(parseFloat(totals.total) - (parseFloat(amountPaid) || 0))}
                   </p>
+                </div>
+              )}
+
+              {/* VAT Exempt Toggle (Admin Only) */}
+              {user.role === 'admin' && (
+                <div className="mb-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isVatExempt}
+                      onChange={(e) => setIsVatExempt(e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    />
+                    <span className="text-sm font-medium text-gray-700">VAT Exempt</span>
+                  </label>
                 </div>
               )}
 
