@@ -1,8 +1,8 @@
 const { createClient } = require('@libsql/client');
 
 // Turso credentials (hardcoded for personal testing project)
-const TURSO_URL = process.env.TURSO_DATABASE_URL || 'libsql://pos-denis0vich.aws-ap-northeast-1.turso.io';
-const TURSO_TOKEN = process.env.TURSO_AUTH_TOKEN || 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NjM5MTcxNjAsImlkIjoiYjk1Y2MxMzQtODY5Yy00ZmIzLTk0ZjctNTYzYzFmMDE3NjJkIiwicmlkIjoiNWU5YTk1YWItMmJhNC00NDQ4LTllNTYtYjE0NGUwZjlmYTdhIn0.63ZD-8hlImspBBF3IqgrHaJ1XpflyyTSWOTd3khVsLW5XeOp1KxstuYbR4Sjp37IcZTjLixPKNYJ2r0CPxg1AQ';
+const TURSO_URL = (process.env.TURSO_DATABASE_URL || 'libsql://pos-denis0vich.aws-ap-northeast-1.turso.io').trim();
+const TURSO_TOKEN = (process.env.TURSO_AUTH_TOKEN || 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3NjM5MTcxNjAsImlkIjoiYjk1Y2MxMzQtODY5Yy00ZmIzLTk0ZjctNTYzYzFmMDE3NjJkIiwicmlkIjoiNWU5YTk1YWItMmJhNC00NDQ4LTllNTYtYjE0NGUwZjlmYTdhIn0.63ZD-8hlImspBBF3IqgrHaJ1XpflyyTSWOTd3khVsLW5XeOp1KxstuYbR4Sjp37IcZTjLixPKNYJ2r0CPxg1AQ').trim();
 
 // Use Turso if credentials are available, otherwise fall back to local SQLite
 const useTurso = TURSO_URL && TURSO_TOKEN;
