@@ -377,8 +377,7 @@ const CashierDashboard = () => {
         payment_received: paymentAmount,
         discount_amount: parseFloat(totals.discount),
         customer_id: selectedCustomerId || null,
-        discount_amount: parseFloat(totals.discount),
-        customer_id: selectedCustomerId || null,
+
         amount_paid: isPartialPayment ? parseFloat(amountPaid) : parseFloat(totals.total),
         payment_deadline: isPartialPayment ? paymentDeadline : null
       };
