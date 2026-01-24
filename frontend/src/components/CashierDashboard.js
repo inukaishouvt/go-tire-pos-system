@@ -29,6 +29,7 @@ const CashierDashboard = () => {
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [themeColor, setThemeColor] = useState(user?.theme_color || '#dc2626');
   const [salesHistory, setSalesHistory] = useState([]);
   const [salesPagination, setSalesPagination] = useState({ page: 1, limit: 20, total: 0, pages: 1 });

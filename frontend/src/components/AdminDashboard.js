@@ -22,8 +22,6 @@ import {
   Search,
   ShoppingCart,
   Scan,
-  CreditCard,
-  Receipt,
   CheckCircle,
   Printer
 } from 'lucide-react';
@@ -125,6 +123,7 @@ const AdminDashboard = () => {
   const [backups, setBackups] = useState([]);
 
   // Pending orders data
+  // eslint-disable-next-line no-unused-vars
   const [pendingOrders, setPendingOrders] = useState([]);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState(null);
@@ -132,6 +131,7 @@ const AdminDashboard = () => {
 
   // Brands data
   const [brands, setBrands] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [newBrand, setNewBrand] = useState('');
 
   // Customer purchase history
@@ -139,6 +139,7 @@ const AdminDashboard = () => {
   const [showCustomerHistoryModal, setShowCustomerHistoryModal] = useState(false);
 
   // Product search
+  // eslint-disable-next-line no-unused-vars
   const [productSearchTerm, setProductSearchTerm] = useState('');
 
   // Checkout / Cashier for Admin
@@ -147,7 +148,9 @@ const AdminDashboard = () => {
   const [checkoutSearchTerm, setCheckoutSearchTerm] = useState('');
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [searchPagination, setSearchPagination] = useState({ page: 1, limit: 50, total: 0, pages: 1 });
+  // eslint-disable-next-line no-unused-vars
   const [isSearching, setIsSearching] = useState(false);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
@@ -726,7 +729,7 @@ const AdminDashboard = () => {
       setCart(cart.filter(item => item.id !== productId));
       return;
     }
-    const product = products.find(p => p.id === productId) || searchResults.find(p => p.id === productId);
+    // const product = products.find(p => p.id === productId) || searchResults.find(p => p.id === productId);
     // If not found in current lists, finding it in cart is safer but stock might be stale.
     // Ideally we should check against strict stock, but for now relying on cart item's original data if available
     const cartItem = cart.find(item => item.id === productId);
