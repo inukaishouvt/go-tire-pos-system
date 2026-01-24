@@ -2482,6 +2482,7 @@ const renderCheckout = () => {
       </div>
     </div>
 
+
         {/* Product Search Modal */ }
   {
     showProductSearch && (
