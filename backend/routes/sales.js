@@ -7,7 +7,7 @@ const router = express.Router();
 // Create new sale
 router.post('/', authenticateToken, requireCashier, async (req, res) => {
     try {
-        const { items, payment_method, payment_received, discount_amount = 0 } = req.body;
+        const { items, payment_method, payment_received, discount_amount = 0, payment_deadline } = req.body;
         const cashier_id = req.user.id;
 
         if (!items || !Array.isArray(items) || items.length === 0) {
@@ -63,6 +63,7 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
         const hasCustomerId = await db.hasColumn('sales', 'customer_id');
         const hasStatus = await db.hasColumn('sales', 'status');
         const hasAmountPaid = await db.hasColumn('sales', 'amount_paid');
+        const hasPaymentDeadline = await db.hasColumn('sales', 'payment_deadline');
         const hasPaymentsTable = await db.hasTable('payments');
 
         // Calculate VAT and total
@@ -99,6 +100,10 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
                 if (hasStatus) {
                     salesColumns.push('status');
                     salesParams.push(status);
+                }
+                if (hasPaymentDeadline && payment_deadline) {
+                    salesColumns.push('payment_deadline');
+                    salesParams.push(payment_deadline);
                 }
 
                 const placeholders = salesParams.map(() => '?').join(', ');
@@ -177,6 +182,10 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
                     if (hasStatus) {
                         salesColumns.push('status');
                         salesParams.push(status);
+                    }
+                    if (hasPaymentDeadline && payment_deadline) {
+                        salesColumns.push('payment_deadline');
+                        salesParams.push(payment_deadline);
                     }
 
                     const placeholders = salesParams.map(() => '?').join(', ');
@@ -684,7 +693,7 @@ router.get('/pending', authenticateToken, requireCashier, async (req, res) => {
         const user = req.user;
 
         let sql = `
-            SELECT s.*, u.full_name as cashier_name, c.name as customer_name,
+            SELECT s.*, u.full_name as cashier_name, c.name as customer_name, c.phone as customer_phone,
                    (s.total_amount - s.amount_paid) as balance_due,
                    s.created_at
             FROM sales s

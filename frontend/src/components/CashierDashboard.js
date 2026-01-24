@@ -54,6 +54,7 @@ const CashierDashboard = () => {
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
   const [newCustomer, setNewCustomer] = useState({ name: '', phone: '', email: '', address: '' });
   const [isVatExempt, setIsVatExempt] = useState(false);
+  const [paymentDeadline, setPaymentDeadline] = useState('');
 
   // Currency formatting helper
   const formatCurrency = (amount) => {
@@ -376,7 +377,10 @@ const CashierDashboard = () => {
         payment_received: paymentAmount,
         discount_amount: parseFloat(totals.discount),
         customer_id: selectedCustomerId || null,
-        amount_paid: isPartialPayment ? parseFloat(amountPaid) : parseFloat(totals.total)
+        discount_amount: parseFloat(totals.discount),
+        customer_id: selectedCustomerId || null,
+        amount_paid: isPartialPayment ? parseFloat(amountPaid) : parseFloat(totals.total),
+        payment_deadline: isPartialPayment ? paymentDeadline : null
       };
 
       const response = await axios.post('/api/sales', saleData);
@@ -387,6 +391,7 @@ const CashierDashboard = () => {
       clearCart();
       setPaymentReceived('');
       setAmountPaid('');
+      setPaymentDeadline('');
       setIsPartialPayment(false);
       setSelectedCustomerId('');
 
@@ -544,12 +549,9 @@ const CashierDashboard = () => {
 
         <div class="footer">
           <div class="separator">================================</div>
-          <p><strong>Thank you for your business!</strong></p>
-          <p>Drive safely! 🚗</p>
-          <p>Warranty: 30 days on parts</p>
-          <p>Returns: 7 days with receipt</p>
+          <p><strong>{settings.receipt_footer?.value || 'Thank you for your business!'}</strong></p>
           <div class="separator">================================</div>
-          <p>Go Tire Car Care Center</p>
+          <p>${settings.company_name?.value || 'Go Tire Car Care Center'}</p>
           <p>Your trusted automotive partner</p>
         </div>
       </body>
@@ -974,7 +976,7 @@ const CashierDashboard = () => {
                       onChange={(e) => setSelectedCustomerId(e.target.value)}
                       className="form-input w-full"
                     >
-                      <option value="">Walk-in Customer</option>
+                      <option value="">Select Customer (Required)</option>
                       {customers
                         .filter(c =>
                           c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
@@ -1025,6 +1027,19 @@ const CashierDashboard = () => {
                   <p className="text-sm text-blue-700 mt-2 font-medium">
                     Balance Remaining: {formatCurrency(parseFloat(totals.total) - (parseFloat(amountPaid) || 0))}
                   </p>
+
+
+                  <label className="block text-sm font-medium text-blue-900 mt-3 mb-1">
+                    Payment Deadline *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={paymentDeadline}
+                    onChange={(e) => setPaymentDeadline(e.target.value)}
+                    className="form-input"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
                 </div>
               )}
 

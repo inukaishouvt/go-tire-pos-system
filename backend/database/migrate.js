@@ -189,9 +189,26 @@ async function migrate() {
             console.error('❌ Error migrating products table:', error.message);
         }
 
+        // 7. Add payment_deadline to sales table
+        console.log('\n📝 Step 7: Migrating sales table (payment_deadline)...');
+        try {
+            const salesColumns = await db.query(`PRAGMA table_info(sales)`);
+            const hasPaymentDeadline = salesColumns.some(col => col.name === 'payment_deadline');
+
+            if (!hasPaymentDeadline) {
+                console.log('  - Adding payment_deadline column...');
+                await db.run(`ALTER TABLE sales ADD COLUMN payment_deadline DATETIME DEFAULT NULL`);
+                console.log('  ✅ payment_deadline column added');
+            } else {
+                console.log('  ⏭️  payment_deadline already exists, skipping');
+            }
+        } catch (error) {
+            console.error('❌ Error migrating sales table (payment_deadline):', error.message);
+        }
+
         console.log('\n✅ Migration completed successfully!');
         console.log('\n📊 Summary:');
-        console.log('  - Sales table: vat_amount, customer_id, status, amount_paid');
+        console.log('  - Sales table: vat_amount, customer_id, status, amount_paid, payment_deadline');
         console.log('  - Customers table: Created');
         console.log('  - Payments table: Created');
         console.log('  - Users table: theme_color');
