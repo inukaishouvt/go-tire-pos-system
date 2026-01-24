@@ -40,10 +40,22 @@ router.put('/', authenticateToken, requireAdmin, async (req, res) => {
 
         // Update each setting
         for (const [key, value] of Object.entries(settings)) {
+            // Ensure values are strings for storage
+            const stringValue = typeof value === 'object' ? JSON.stringify(value) : String(value);
+
             await db.run(
-                'UPDATE settings SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?',
-                [value, key]
+                'UPDATE settings SET value =?, updated_at = CURRENT_TIMESTAMP WHERE key =?',
+                [stringValue, key]
             );
+
+            // If the row doesn't exist (e.g. new setting like receipt_footer), insert it
+            const exists = await db.get('SELECT id FROM settings WHERE key =?', [key]);
+            if (!exists) {
+                await db.run(
+                    'INSERT INTO settings (key, value, description) VALUES (?,?,?)',
+                    [key, stringValue, key === 'receipt_footer' ? 'Receipt footer message' : 'System setting']
+                );
+            }
         }
 
         // Return updated settings

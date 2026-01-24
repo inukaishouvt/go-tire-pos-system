@@ -17,7 +17,7 @@ async function migrate() {
         console.log('\n📝 Step 1: Migrating sales table...');
         try {
             // Check if vat_amount already exists
-            const salesColumns = await db.all(`PRAGMA table_info(sales)`);
+            const salesColumns = await db.query(`PRAGMA table_info(sales)`);
             const hasVatAmount = salesColumns.some(col => col.name === 'vat_amount');
 
             if (!hasVatAmount) {
@@ -63,6 +63,16 @@ async function migrate() {
             } else {
                 console.log('  ⏭️  amount_paid already exists, skipping');
             }
+
+            // Add discount_amount column
+            const hasDiscountAmount = salesColumns.some(col => col.name === 'discount_amount');
+            if (!hasDiscountAmount) {
+                console.log('  - Adding discount_amount column...');
+                await db.run(`ALTER TABLE sales ADD COLUMN discount_amount DECIMAL(10, 2) DEFAULT 0`);
+                console.log('  ✅ discount_amount column added');
+            } else {
+                console.log('  ⏭️  discount_amount already exists, skipping');
+            }
         } catch (error) {
             console.error('❌ Error migrating sales table:', error.message);
         }
@@ -107,7 +117,7 @@ async function migrate() {
         // 4. Add theme_color to users table
         console.log('\n📝 Step 4: Migrating users table...');
         try {
-            const usersColumns = await db.all(`PRAGMA table_info(users)`);
+            const usersColumns = await db.query(`PRAGMA table_info(users)`);
             const hasThemeColor = usersColumns.some(col => col.name === 'theme_color');
 
             if (!hasThemeColor) {
@@ -139,6 +149,16 @@ async function migrate() {
                 await db.run(`INSERT INTO settings (key, value) VALUES ('vat_rate', '12.0')`);
                 console.log('  ✅ default vat_rate setting added');
             }
+
+            // Ensure receipt_footer exists
+            const receiptFooter = await db.get(`SELECT * FROM settings WHERE key = 'receipt_footer'`);
+            if (!receiptFooter) {
+                console.log('  - Creating default receipt_footer setting...');
+                await db.run(`INSERT INTO settings (key, value) VALUES ('receipt_footer', 'Thank you for your business!')`);
+                console.log('  ✅ receipt_footer setting added');
+            } else {
+                console.log('  ⏭️  receipt_footer already exists, skipping');
+            }
         } catch (error) {
             console.error('❌ Error migrating settings:', error.message);
         }
@@ -146,7 +166,7 @@ async function migrate() {
         // 6. Add brand and tire_size to products if they don't exist
         console.log('\n📝 Step 6: Migrating products table...');
         try {
-            const productsColumns = await db.all(`PRAGMA table_info(products)`);
+            const productsColumns = await db.query(`PRAGMA table_info(products)`);
             const hasBrand = productsColumns.some(col => col.name === 'brand');
             const hasTireSize = productsColumns.some(col => col.name === 'tire_size');
 

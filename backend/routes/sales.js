@@ -258,7 +258,7 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
 // Get sales history
 router.get('/', authenticateToken, requireCashier, async (req, res) => {
     try {
-        const { page = 1, limit = 20, start_date, end_date, cashier_id } = req.query;
+        const { page = 1, limit = 20, start_date, end_date, cashier_id, customer_id } = req.query;
         const offset = (page - 1) * limit;
         const user = req.user;
 
@@ -279,6 +279,11 @@ router.get('/', authenticateToken, requireCashier, async (req, res) => {
         } else if (cashier_id) {
             sql += ' AND s.cashier_id = ?';
             params.push(cashier_id);
+        }
+
+        if (customer_id) {
+            sql += ' AND s.customer_id = ?';
+            params.push(customer_id);
         }
 
         if (start_date) {
@@ -306,6 +311,11 @@ router.get('/', authenticateToken, requireCashier, async (req, res) => {
         } else if (cashier_id) {
             countSql += ' AND s.cashier_id = ?';
             countParams.push(cashier_id);
+        }
+
+        if (customer_id) {
+            countSql += ' AND s.customer_id = ?';
+            countParams.push(customer_id);
         }
 
         if (start_date) {
@@ -675,7 +685,8 @@ router.get('/pending', authenticateToken, requireCashier, async (req, res) => {
 
         let sql = `
             SELECT s.*, u.full_name as cashier_name, c.name as customer_name,
-                   (s.total_amount - s.amount_paid) as balance_due
+                   (s.total_amount - s.amount_paid) as balance_due,
+                   s.created_at
             FROM sales s
             JOIN users u ON s.cashier_id = u.id
             LEFT JOIN customers c ON s.customer_id = c.id

@@ -798,7 +798,7 @@ const CashierDashboard = () => {
                   <div key={item.id} className="cart-item">
                     <div className="flex-1">
                       <h4 className="font-semibold text-gray-800">{item.name}</h4>
-                      <p className="text-sm text-gray-500">${item.price} each</p>
+                      <p className="text-sm text-gray-500">{formatCurrency(item.price)} each</p>
                     </div>
                     <div className="cart-item-controls">
                       <button
@@ -894,13 +894,13 @@ const CashierDashboard = () => {
                   {cart.map(item => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <span>{item.name} x{item.quantity}</span>
-                      <span>${(item.price * item.quantity).toFixed(2)}</span>
+                      <span>{formatCurrency(item.price * item.quantity)}</span>
                     </div>
                   ))}
                   <div className="border-t pt-2 mt-2 font-medium">
                     <div className="flex justify-between">
                       <span>Total:</span>
-                      <span>${totals.total}</span>
+                      <span>{formatCurrency(totals.total)}</span>
                     </div>
                   </div>
                 </div>
@@ -1106,11 +1106,11 @@ const CashierDashboard = () => {
                   <div style={{ flex: 1 }}>
                     <div className="product-name">{item.product_name}</div>
                     <div className="product-details">
-                      Qty: {item.quantity} @ ${parseFloat(item.unit_price).toFixed(2)}
+                      Qty: {item.quantity} @ {formatCurrency(item.unit_price)}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                    ${parseFloat(item.total_price).toFixed(2)}
+                    {formatCurrency(item.total_price)}
                   </div>
                 </div>
               ))}
@@ -1355,7 +1355,7 @@ const CashierDashboard = () => {
                   <tr key={sale.id}>
                     <td>#{sale.id}</td>
                     <td>{new Date(sale.created_at).toLocaleDateString()}</td>
-                    <td>${sale.total_amount}</td>
+                    <td>{formatCurrency(sale.total_amount)}</td>
                     <td className="capitalize">{sale.payment_method}</td>
                   </tr>
                 ))}

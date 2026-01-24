@@ -41,7 +41,7 @@ router.post('/', authenticateToken, requireAdmin, async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const result = await db.run(
             'INSERT INTO users (username, password, role, full_name) VALUES (?, ?, ?, ?)',
-            [username, hashedPassword, role, full_name]
+            [String(username), hashedPassword, String(role), full_name ? String(full_name) : null]
         );
 
         if (!result.id) {
@@ -92,15 +92,15 @@ router.put('/:id', authenticateToken, requireAdmin, async (req, res) => {
 
         if (username !== undefined) {
             updates.push('username = ?');
-            params.push(username);
+            params.push(String(username));
         }
         if (role !== undefined) {
             updates.push('role = ?');
-            params.push(role);
+            params.push(String(role));
         }
         if (full_name !== undefined) {
             updates.push('full_name = ?');
-            params.push(full_name);
+            params.push(full_name ? String(full_name) : null);
         }
 
         updates.push('updated_at = CURRENT_TIMESTAMP');
