@@ -129,6 +129,13 @@ const CashierDashboard = () => {
     }
   }, []);
 
+  // Apply user theme color
+  useEffect(() => {
+    if (user?.theme_color) {
+      document.documentElement.style.setProperty('--theme-color', user.theme_color);
+    }
+  }, [user]);
+
   // Debounced search when search term changes in product search modal
   useEffect(() => {
     if (showProductSearch && searchTerm) {
