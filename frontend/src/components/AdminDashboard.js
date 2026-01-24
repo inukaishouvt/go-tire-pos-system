@@ -2519,290 +2519,289 @@ const AdminDashboard = () => {
         </div>
       )
     }
-  </div >
     );
   };
 
 const renderProductModal = () => (
-  <div
-    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    style={{ display: showProductModal ? 'flex' : 'none' }}
-  >
-    <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-      <div className="flex items-center justify-between p-6 border-b">
-        <h3 className="text-lg font-semibold text-gray-900">
-          {editingProduct ? 'Edit Product' : 'Add New Product'}
-        </h3>
-        <button
-          onClick={() => setShowProductModal(false)}
-          className="text-gray-400 hover:text-gray-600"
-        >
-          <X className="w-6 h-6" />
-        </button>
-      </div>
-
-      <form onSubmit={handleProductSubmit} className="p-6 space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Product Name *
-            </label>
-            <input
-              type="text"
-              required
-              value={productForm.name}
-              onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              SKU *
-            </label>
-            <input
-              type="text"
-              required
-              value={productForm.sku}
-              onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
-              placeholder="e.g., MIC-DEF-225-65-17"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Barcode
-            </label>
-            <input
-              type="text"
-              value={productForm.barcode}
-              onChange={(e) => setProductForm({ ...productForm, barcode: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Price *
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              required
-              value={productForm.price}
-              onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Cost
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={productForm.cost}
-              onChange={(e) => setProductForm({ ...productForm, cost: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Stock Quantity *
-            </label>
-            <input
-              type="number"
-              required
-              value={productForm.stock}
-              onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Minimum Stock
-            </label>
-            <input
-              type="number"
-              value={productForm.min_stock}
-              onChange={(e) => setProductForm({ ...productForm, min_stock: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Category
-            </label>
-            <select
-              value={productForm.category}
-              onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select Category</option>
-              <option value="Passenger Tires">Passenger Tires</option>
-              <option value="Truck Tires">Truck Tires</option>
-              <option value="SUV Tires">SUV Tires</option>
-              <option value="Performance Tires">Performance Tires</option>
-              <option value="Winter Tires">Winter Tires</option>
-              <option value="All-Season Tires">All-Season Tires</option>
-              <option value="Motorcycle Tires">Motorcycle Tires</option>
-              <option value="Oil & Fluids">Oil & Fluids</option>
-              <option value="Auto Parts">Auto Parts</option>
-              <option value="Brake Pads">Brake Pads</option>
-              <option value="Tire Accessories">Tire Accessories</option>
-              <option value="Wheels">Wheels</option>
-              <option value="Car Care">Car Care</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Brand
-            </label>
-            <select
-              value={productForm.brand}
-              onChange={(e) => {
-                if (e.target.value === '__ADD_NEW__') {
-                  const brandName = prompt('Enter new brand name:');
-                  if (brandName && brandName.trim()) {
-                    setBrands([...brands, brandName.trim()]);
-                    setProductForm({ ...productForm, brand: brandName.trim() });
-                  }
-                } else {
-                  setProductForm({ ...productForm, brand: e.target.value });
-                }
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select Brand</option>
-              {brands.map(brand => (
-                <option key={brand} value={brand}>{brand}</option>
-              ))}
-              <option value="__ADD_NEW__">+ Add New Brand</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Tire Size / Type
-            </label>
-            <input
-              type="text"
-              value={productForm.tire_size}
-              onChange={(e) => setProductForm({ ...productForm, tire_size: e.target.value })}
-              placeholder="225/65R17, 5W-30, 17x8, etc."
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Description
-          </label>
-          <textarea
-            rows={3}
-            value={productForm.description}
-            onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <div className="flex justify-end space-x-3 pt-4">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      style={{ display: showProductModal ? 'flex' : 'none' }}
+    >
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h3 className="text-lg font-semibold text-gray-900">
+            {editingProduct ? 'Edit Product' : 'Add New Product'}
+          </h3>
           <button
-            type="button"
             onClick={() => setShowProductModal(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleProductSubmit} className="p-6 space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Product Name *
+              </label>
+              <input
+                type="text"
+                required
+                value={productForm.name}
+                onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                SKU *
+              </label>
+              <input
+                type="text"
+                required
+                value={productForm.sku}
+                onChange={(e) => setProductForm({ ...productForm, sku: e.target.value })}
+                placeholder="e.g., MIC-DEF-225-65-17"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Barcode
+              </label>
+              <input
+                type="text"
+                value={productForm.barcode}
+                onChange={(e) => setProductForm({ ...productForm, barcode: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Price *
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={productForm.price}
+                onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Cost
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={productForm.cost}
+                onChange={(e) => setProductForm({ ...productForm, cost: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Stock Quantity *
+              </label>
+              <input
+                type="number"
+                required
+                value={productForm.stock}
+                onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Minimum Stock
+              </label>
+              <input
+                type="number"
+                value={productForm.min_stock}
+                onChange={(e) => setProductForm({ ...productForm, min_stock: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                value={productForm.category}
+                onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select Category</option>
+                <option value="Passenger Tires">Passenger Tires</option>
+                <option value="Truck Tires">Truck Tires</option>
+                <option value="SUV Tires">SUV Tires</option>
+                <option value="Performance Tires">Performance Tires</option>
+                <option value="Winter Tires">Winter Tires</option>
+                <option value="All-Season Tires">All-Season Tires</option>
+                <option value="Motorcycle Tires">Motorcycle Tires</option>
+                <option value="Oil & Fluids">Oil & Fluids</option>
+                <option value="Auto Parts">Auto Parts</option>
+                <option value="Brake Pads">Brake Pads</option>
+                <option value="Tire Accessories">Tire Accessories</option>
+                <option value="Wheels">Wheels</option>
+                <option value="Car Care">Car Care</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Brand
+              </label>
+              <select
+                value={productForm.brand}
+                onChange={(e) => {
+                  if (e.target.value === '__ADD_NEW__') {
+                    const brandName = prompt('Enter new brand name:');
+                    if (brandName && brandName.trim()) {
+                      setBrands([...brands, brandName.trim()]);
+                      setProductForm({ ...productForm, brand: brandName.trim() });
+                    }
+                  } else {
+                    setProductForm({ ...productForm, brand: e.target.value });
+                  }
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select Brand</option>
+                {brands.map(brand => (
+                  <option key={brand} value={brand}>{brand}</option>
+                ))}
+                <option value="__ADD_NEW__">+ Add New Brand</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tire Size / Type
+              </label>
+              <input
+                type="text"
+                value={productForm.tire_size}
+                onChange={(e) => setProductForm({ ...productForm, tire_size: e.target.value })}
+                placeholder="225/65R17, 5W-30, 17x8, etc."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description
+            </label>
+            <textarea
+              rows={3}
+              value={productForm.description}
+              onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={() => setShowProductModal(false)}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            >
+              <Save className="w-4 h-4" />
+              {loading ? 'Saving...' : (editingProduct ? 'Update Product' : 'Create Product')}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    );
+
+const renderImportModal = () => (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      style={{ display: showImportModal ? 'flex' : 'none' }}
+    >
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h3 className="text-lg font-semibold text-gray-900">Bulk Product Import</h3>
+          <button
+            onClick={() => setShowImportModal(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+        <div className="p-6 space-y-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
+            <p className="font-bold mb-1">Format Requirement:</p>
+            <p>Please provide a JSON array of products. Example:</p>
+            <pre className="mt-2 text-xs overflow-x-auto bg-white p-2 border rounded">
+              {"[\n  {\n    \"name\": \"Sample Tire\",\n    \"sku\": \"TIRE-001\",\n    \"price\": 1500,\n    \"cost\": 1000,\n    \"stock\": 10,\n    \"category\": \"Passenger Tires\",\n    \"brand\": \"Michelin\",\n    \"tire_size\": \"225/65/17\"\n  }\n]"}
+            </pre>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              JSON Data
+            </label>
+            <textarea
+              value={importData}
+              onChange={(e) => setImportData(e.target.value)}
+              placeholder="Paste JSON array here..."
+              rows="10"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end p-6 border-t gap-3">
+          <button
+            onClick={() => setShowImportModal(false)}
             className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
           >
             Cancel
           </button>
           <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+            onClick={handleBulkImport}
+            disabled={loading || !importData.trim()}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
           >
-            <Save className="w-4 h-4" />
-            {loading ? 'Saving...' : (editingProduct ? 'Update Product' : 'Create Product')}
+            {loading ? 'Importing...' : 'Start Import'}
           </button>
         </div>
-      </form>
-    </div>
-  </div>
-);
-
-const renderImportModal = () => (
-  <div
-    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    style={{ display: showImportModal ? 'flex' : 'none' }}
-  >
-    <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4">
-      <div className="flex items-center justify-between p-6 border-b">
-        <h3 className="text-lg font-semibold text-gray-900">Bulk Product Import</h3>
-        <button
-          onClick={() => setShowImportModal(false)}
-          className="text-gray-400 hover:text-gray-600"
-        >
-          <X className="w-6 h-6" />
-        </button>
-      </div>
-      <div className="p-6 space-y-4">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-800">
-          <p className="font-bold mb-1">Format Requirement:</p>
-          <p>Please provide a JSON array of products. Example:</p>
-          <pre className="mt-2 text-xs overflow-x-auto bg-white p-2 border rounded">
-            {"[\n  {\n    \"name\": \"Sample Tire\",\n    \"sku\": \"TIRE-001\",\n    \"price\": 1500,\n    \"cost\": 1000,\n    \"stock\": 10,\n    \"category\": \"Passenger Tires\",\n    \"brand\": \"Michelin\",\n    \"tire_size\": \"225/65/17\"\n  }\n]"}
-          </pre>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            JSON Data
-          </label>
-          <textarea
-            value={importData}
-            onChange={(e) => setImportData(e.target.value)}
-            placeholder="Paste JSON array here..."
-            rows="10"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
-          />
-        </div>
-      </div>
-      <div className="flex justify-end p-6 border-t gap-3">
-        <button
-          onClick={() => setShowImportModal(false)}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={handleBulkImport}
-          disabled={loading || !importData.trim()}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50"
-        >
-          {loading ? 'Importing...' : 'Start Import'}
-        </button>
       </div>
     </div>
-  </div>
-);
+    );
 
-const sidebarItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'checkout', label: 'Checkout', icon: ShoppingCart },
-  { id: 'products', label: 'Products', icon: Package },
-  { id: 'customers', label: 'Customers', icon: Users },
-  { id: 'users', label: 'Users', icon: Users },
-  { id: 'reports', label: 'Reports', icon: BarChart3 },
-  { id: 'settings', label: 'Settings', icon: Settings },
-  { id: 'backup', label: 'Backup', icon: Database },
-];
+    const sidebarItems = [
+    {id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    {id: 'checkout', label: 'Checkout', icon: ShoppingCart },
+    {id: 'products', label: 'Products', icon: Package },
+    {id: 'customers', label: 'Customers', icon: Users },
+    {id: 'users', label: 'Users', icon: Users },
+    {id: 'reports', label: 'Reports', icon: BarChart3 },
+    {id: 'settings', label: 'Settings', icon: Settings },
+    {id: 'backup', label: 'Backup', icon: Database },
+    ];
 
-// Show loading screen while initial data is being fetched
-if (initialLoading) {
+    // Show loading screen while initial data is being fetched
+    if (initialLoading) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
       <div className="text-center">
@@ -2811,200 +2810,200 @@ if (initialLoading) {
         <p className="text-gray-600">Fetching your data...</p>
       </div>
     </div>
-  );
+    );
 }
 
 // Payment Modal for Pending Orders
 const renderPaymentModal = () => (
-  <div
-    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    style={{ display: showPaymentModal ? 'flex' : 'none' }}
-  >
-    <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
-      <div className="flex items-center justify-between p-6 border-b">
-        <h3 className="text-lg font-semibold text-gray-900">Add Payment</h3>
-        <button
-          onClick={() => {
-            setShowPaymentModal(false);
-            setPaymentAmount('');
-            setSelectedSale(null);
-          }}
-          className="text-gray-400 hover:text-gray-600"
-        >
-          <X className="w-6 h-6" />
-        </button>
-      </div>
-
-      <form onSubmit={handleAddPayment} className="p-6 space-y-4">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-sm text-gray-600">Order ID: #{selectedSale?.id}</p>
-          <p className="text-sm text-gray-600">Total: {formatCurrency(selectedSale?.total_amount)}</p>
-          <p className="text-sm text-gray-600">Paid: {formatCurrency(selectedSale?.amount_paid)}</p>
-          <p className="text-lg font-bold text-gray-900 mt-2">
-            Balance: {formatCurrency((selectedSale?.total_amount || 0) - (selectedSale?.amount_paid || 0))}
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Payment Amount *
-          </label>
-          <input
-            type="number"
-            step="0.01"
-            required
-            value={paymentAmount}
-            onChange={(e) => setPaymentAmount(e.target.value)}
-            placeholder="Enter payment amount"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          />
-        </div>
-
-        <div className="flex justify-end space-x-3 pt-4">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      style={{ display: showPaymentModal ? 'flex' : 'none' }}
+    >
+      <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h3 className="text-lg font-semibold text-gray-900">Add Payment</h3>
           <button
-            type="button"
             onClick={() => {
               setShowPaymentModal(false);
               setPaymentAmount('');
               setSelectedSale(null);
             }}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            className="text-gray-400 hover:text-gray-600"
           >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-50"
-          >
-            {loading ? 'Processing...' : 'Add Payment'}
+            <X className="w-6 h-6" />
           </button>
         </div>
-      </form>
+
+        <form onSubmit={handleAddPayment} className="p-6 space-y-4">
+          <div className="bg-gray-50 p-4 rounded-lg">
+            <p className="text-sm text-gray-600">Order ID: #{selectedSale?.id}</p>
+            <p className="text-sm text-gray-600">Total: {formatCurrency(selectedSale?.total_amount)}</p>
+            <p className="text-sm text-gray-600">Paid: {formatCurrency(selectedSale?.amount_paid)}</p>
+            <p className="text-lg font-bold text-gray-900 mt-2">
+              Balance: {formatCurrency((selectedSale?.total_amount || 0) - (selectedSale?.amount_paid || 0))}
+            </p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Payment Amount *
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              required
+              value={paymentAmount}
+              onChange={(e) => setPaymentAmount(e.target.value)}
+              placeholder="Enter payment amount"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setShowPaymentModal(false);
+                setPaymentAmount('');
+                setSelectedSale(null);
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              {loading ? 'Processing...' : 'Add Payment'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
-  </div>
-);
+    );
 
 // Customer History Modal
 const renderCustomerHistoryModal = () => (
-  <div
-    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-    style={{ display: showCustomerHistoryModal ? 'flex' : 'none' }}
-  >
-    <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-      <div className="flex items-center justify-between p-6 border-b">
-        <h3 className="text-lg font-semibold text-gray-900">Customer Purchase History</h3>
-        <button
-          onClick={() => setShowCustomerHistoryModal(false)}
-          className="text-gray-400 hover:text-gray-600"
-        >
-          <X className="w-6 h-6" />
-        </button>
-      </div>
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      style={{ display: showCustomerHistoryModal ? 'flex' : 'none' }}
+    >
+      <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h3 className="text-lg font-semibold text-gray-900">Customer Purchase History</h3>
+          <button
+            onClick={() => setShowCustomerHistoryModal(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
-      <div className="p-6">
-        {customerHistory.length > 0 ? (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead>
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {customerHistory.map((sale) => (
-                <tr key={sale.id}>
-                  <td className="px-6 py-4 text-sm text-gray-900">
-                    {new Date(sale.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-900">#{sale.id}</td>
-                  <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(sale.total_amount)}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${sale.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                      }`}>
-                      {sale.status}
-                    </span>
-                  </td>
+        <div className="p-6">
+          {customerHistory.length > 0 ? (
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead>
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        ) : (
-          <p className="text-center text-gray-500 py-8">No purchase history found.</p>
-        )}
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {customerHistory.map((sale) => (
+                  <tr key={sale.id}>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {new Date(sale.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-900">#{sale.id}</td>
+                    <td className="px-6 py-4 text-sm text-gray-900">{formatCurrency(sale.total_amount)}</td>
+                    <td className="px-6 py-4 text-sm">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${sale.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
+                        }`}>
+                        {sale.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <p className="text-center text-gray-500 py-8">No purchase history found.</p>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+    );
 
-return (
-  <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
-    {/* Sidebar */}
-    <div className="w-72 flex-shrink-0 bg-gradient-to-b from-gray-900 to-gray-800 shadow-2xl border-r border-gray-700 sticky top-0 h-screen flex flex-col">
-      <div className="p-8">
-        <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-6 text-white">
-          <h1 className="text-2xl font-bold mb-2">{settings.company_name?.value || 'Go Tire Car Care Center'} Admin</h1>
-          <p className="text-red-100 text-sm">Welcome back, {user?.username}</p>
+    return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex">
+      {/* Sidebar */}
+      <div className="w-72 flex-shrink-0 bg-gradient-to-b from-gray-900 to-gray-800 shadow-2xl border-r border-gray-700 sticky top-0 h-screen flex flex-col">
+        <div className="p-8">
+          <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-6 text-white">
+            <h1 className="text-2xl font-bold mb-2">{settings.company_name?.value || 'Go Tire Car Care Center'} Admin</h1>
+            <p className="text-red-100 text-sm">Welcome back, {user?.username}</p>
+          </div>
+        </div>
+
+        <nav className="px-6">
+          {sidebarItems.map(item => {
+            const Icon = item.icon;
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center px-6 py-4 text-left text-sm font-medium transition-all duration-200 rounded-xl mb-2 ${activeTab === item.id
+                  ? 'text-white shadow-lg transform scale-105'
+                  : 'text-gray-300 hover:bg-gray-700 hover:text-white hover:transform hover:scale-105'
+                  }`}
+                style={activeTab === item.id ? { backgroundColor: user?.theme_color || '#dc2626' } : {}}
+              >
+                <Icon className="w-6 h-6 mr-4" />
+                {item.label}
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="mt-auto p-6 border-t border-gray-700">
+          <button
+            onClick={logout}
+            className="w-full flex items-center px-6 py-4 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-xl transition-all duration-200"
+          >
+            <LogOut className="w-6 h-6 mr-4" />
+            Logout
+          </button>
         </div>
       </div>
 
-      <nav className="px-6">
-        {sidebarItems.map(item => {
-          const Icon = item.icon;
-          return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center px-6 py-4 text-left text-sm font-medium transition-all duration-200 rounded-xl mb-2 ${activeTab === item.id
-                ? 'text-white shadow-lg transform scale-105'
-                : 'text-gray-300 hover:bg-gray-700 hover:text-white hover:transform hover:scale-105'
-                }`}
-              style={activeTab === item.id ? { backgroundColor: user?.theme_color || '#dc2626' } : {}}
-            >
-              <Icon className="w-6 h-6 mr-4" />
-              {item.label}
-            </button>
-          );
-        })}
-      </nav>
-
-      <div className="mt-auto p-6 border-t border-gray-700">
-        <button
-          onClick={logout}
-          className="w-full flex items-center px-6 py-4 text-sm font-medium text-gray-300 hover:text-white hover:bg-gray-700 rounded-xl transition-all duration-200"
-        >
-          <LogOut className="w-6 h-6 mr-4" />
-          Logout
-        </button>
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          {activeTab === 'dashboard' && renderDashboard()}
+          {activeTab === 'checkout' && renderCheckout()}
+          {activeTab === 'products' && renderProducts()}
+          {activeTab === 'customers' && renderCustomers()}
+          {activeTab === 'users' && renderUsers()}
+          {activeTab === 'reports' && renderReports()}
+          {activeTab === 'settings' && renderSettings()}
+          {activeTab === 'backup' && renderBackup()}
+        </div>
       </div>
-    </div>
 
-    {/* Main Content */}
-    <div className="flex-1 overflow-auto">
-      <div className="p-8">
-        {activeTab === 'dashboard' && renderDashboard()}
-        {activeTab === 'checkout' && renderCheckout()}
-        {activeTab === 'products' && renderProducts()}
-        {activeTab === 'customers' && renderCustomers()}
-        {activeTab === 'users' && renderUsers()}
-        {activeTab === 'reports' && renderReports()}
-        {activeTab === 'settings' && renderSettings()}
-        {activeTab === 'backup' && renderBackup()}
-      </div>
+      {/* Modals */}
+      {renderProductModal()}
+      {renderUserModal()}
+      {renderCustomerModal()}
+      {renderProductHistoryModal()}
+      {renderImportModal()}
+      {renderPaymentModal()}
+      {renderCustomerHistoryModal()}
     </div>
-
-    {/* Modals */}
-    {renderProductModal()}
-    {renderUserModal()}
-    {renderCustomerModal()}
-    {renderProductHistoryModal()}
-    {renderImportModal()}
-    {renderPaymentModal()}
-    {renderCustomerHistoryModal()}
-  </div>
-);
+    );
 };
 
-export default AdminDashboard;
+    export default AdminDashboard;
