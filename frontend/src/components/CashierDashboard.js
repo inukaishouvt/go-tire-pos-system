@@ -698,12 +698,12 @@ const CashierDashboard = () => {
                 </div>
               )}
               {user.role === 'cashier' && !adminOverride && (
-                <div className="pos-override-panel bg-gray-100">
-                  <h4 className="font-bold text-gray-700 mb-2 flex items-center gap-2">
+                <div className="pos-override-panel bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                  <h4 className="font-bold text-yellow-900 mb-2 flex items-center gap-2">
                     🔒 Cashier Account
                   </h4>
-                  <p className="text-sm text-gray-600">
-                    Price editing and discounts are restricted. Scan barcode ADMIN_OVERRIDE_2024 to enable admin override.
+                  <p className="text-sm text-yellow-800 font-medium">
+                    Price editing and discounts are restricted. Scan barcode <span className="font-mono bg-yellow-200 px-1 rounded text-yellow-900">ADMIN_OVERRIDE_2024</span> to enable admin override.
                   </p>
                 </div>
               )}
