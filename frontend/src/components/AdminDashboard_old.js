@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import axios from 'axios';
-import { 
-  LayoutDashboard, 
-  Package, 
-  Users, 
-  BarChart3, 
-  Settings, 
+import {
+  LayoutDashboard,
+  Package,
+  Users,
+  BarChart3,
+  Settings,
   Database,
   LogOut,
   Plus,
@@ -28,10 +28,10 @@ const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(false);
-  
+
   // Dashboard data
   const [dashboardData, setDashboardData] = useState({});
-  
+
   // Products data
   const [products, setProducts] = useState([]);
   const [showProductModal, setShowProductModal] = useState(false);
@@ -46,19 +46,19 @@ const AdminDashboard = () => {
     description: '',
     min_stock: ''
   });
-  
+
   // Users data
   const [users, setUsers] = useState([]);
   const [showUserModal, setShowUserModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
-  
+
   // Sales data
   const [salesData, setSalesData] = useState({});
   const [salesHistory, setSalesHistory] = useState([]);
-  
+
   // Settings data
   const [settings, setSettings] = useState({});
-  
+
   // Backup data
   const [backups, setBackups] = useState([]);
 
@@ -109,7 +109,7 @@ const AdminDashboard = () => {
     try {
       const response = await axios.get('/api/sales/reports/summary');
       setSalesData(response.data);
-      
+
       const historyResponse = await axios.get('/api/sales?limit=50');
       setSalesHistory(historyResponse.data.sales || []);
     } catch (error) {
@@ -181,7 +181,7 @@ const AdminDashboard = () => {
   const handleProductSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const productData = {
         ...productForm,
@@ -198,7 +198,7 @@ const AdminDashboard = () => {
         await axios.post('/api/products', productData);
         toast.success('Product created successfully');
       }
-      
+
       setShowProductModal(false);
       fetchProducts();
     } catch (error) {
@@ -210,7 +210,7 @@ const AdminDashboard = () => {
 
   const handleDeleteProduct = async (productId) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
-    
+
     try {
       await axios.delete(`/api/products/${productId}`);
       toast.success('Product deleted successfully');
@@ -230,11 +230,11 @@ const AdminDashboard = () => {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-      
+
       const dayTotal = salesHistory
         .filter(sale => sale.created_at?.startsWith(dateStr))
         .reduce((sum, sale) => sum + parseFloat(sale.total || 0), 0);
-      
+
       last7Days.push({
         date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         sales: dayTotal
@@ -255,12 +255,12 @@ const AdminDashboard = () => {
     });
 
     const topProducts = Object.entries(productSales)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([name, quantity]) => ({ name, quantity }));
 
     // Low stock products
-    const lowStockProducts = products.filter(product => 
+    const lowStockProducts = products.filter(product =>
       product.stock <= (product.min_stock || 5)
     );
 
@@ -273,7 +273,7 @@ const AdminDashboard = () => {
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Dashboard Overview</h2>
-        
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-sm border p-6">
@@ -425,9 +425,8 @@ const AdminDashboard = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <span className={`text-sm font-medium ${
-                        product.stock <= (product.min_stock || 5) ? 'text-red-600' : 'text-gray-900'
-                      }`}>
+                      <span className={`text-sm font-medium ${product.stock <= (product.min_stock || 5) ? 'text-red-600' : 'text-gray-900'
+                        }`}>
                         {product.stock}
                       </span>
                       {product.stock <= (product.min_stock || 5) && (
@@ -490,7 +489,7 @@ const AdminDashboard = () => {
                   type="text"
                   required
                   value={productForm.name}
-                  onChange={(e) => setProductForm({...productForm, name: e.target.value})}
+                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -502,7 +501,7 @@ const AdminDashboard = () => {
                 <input
                   type="text"
                   value={productForm.barcode}
-                  onChange={(e) => setProductForm({...productForm, barcode: e.target.value})}
+                  onChange={(e) => setProductForm({ ...productForm, barcode: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -516,7 +515,7 @@ const AdminDashboard = () => {
                   step="0.01"
                   required
                   value={productForm.price}
-                  onChange={(e) => setProductForm({...productForm, price: e.target.value})}
+                  onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -529,7 +528,7 @@ const AdminDashboard = () => {
                   type="number"
                   step="0.01"
                   value={productForm.cost}
-                  onChange={(e) => setProductForm({...productForm, cost: e.target.value})}
+                  onChange={(e) => setProductForm({ ...productForm, cost: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -542,7 +541,7 @@ const AdminDashboard = () => {
                   type="number"
                   required
                   value={productForm.stock}
-                  onChange={(e) => setProductForm({...productForm, stock: e.target.value})}
+                  onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -554,7 +553,7 @@ const AdminDashboard = () => {
                 <input
                   type="number"
                   value={productForm.min_stock}
-                  onChange={(e) => setProductForm({...productForm, min_stock: e.target.value})}
+                  onChange={(e) => setProductForm({ ...productForm, min_stock: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -566,7 +565,7 @@ const AdminDashboard = () => {
                 <input
                   type="text"
                   value={productForm.category}
-                  onChange={(e) => setProductForm({...productForm, category: e.target.value})}
+                  onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
@@ -579,7 +578,7 @@ const AdminDashboard = () => {
               <textarea
                 rows={3}
                 value={productForm.description}
-                onChange={(e) => setProductForm({...productForm, description: e.target.value})}
+                onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -606,11 +605,11 @@ const AdminDashboard = () => {
       </div>
     )
   );
-                <p className="stat-value">{dashboardData.database?.total_sales || 0}</p>
-              </div>
-              <ShoppingCart className="w-8 h-8 text-purple-500" />
-            </div>
-          </div>
+  <p className="stat-value">{dashboardData.database?.total_sales || 0}</p>
+              </div >
+  <ShoppingCart className="w-8 h-8 text-purple-500" />
+            </div >
+          </div >
           
           <div className="stat-card">
             <div className="flex items-center justify-between">
@@ -641,595 +640,594 @@ const AdminDashboard = () => {
               <TrendingUp className="w-8 h-8 text-indigo-500" />
             </div>
           </div>
-        </div>
+        </div >
+      </div >
+    );
+  };
+<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div className="card">
+    <h3 className="card-title mb-4">Quick Actions</h3>
+    <div className="grid grid-cols-2 gap-4">
+      <button
+        onClick={() => setActiveTab('products')}
+        className="btn btn-primary"
+      >
+        <Package className="w-4 h-4" />
+        Manage Products
+      </button>
+      <button
+        onClick={() => setActiveTab('users')}
+        className="btn btn-secondary"
+      >
+        <Users className="w-4 h-4" />
+        Manage Users
+      </button>
+      <button
+        onClick={() => setActiveTab('reports')}
+        className="btn btn-success"
+      >
+        <BarChart3 className="w-4 h-4" />
+        View Reports
+      </button>
+      <button
+        onClick={handleCreateBackup}
+        disabled={loading}
+        className="btn btn-outline"
+      >
+        <Database className="w-4 h-4" />
+        Create Backup
+      </button>
+    </div>
+  </div>
+
+  <div className="card">
+    <h3 className="card-title mb-4">System Status</h3>
+    <div className="space-y-3">
+      <div className="flex justify-between items-center">
+        <span className="text-gray-600">Database Status</span>
+        <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">Online</span>
       </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="card-title mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <button
-              onClick={() => setActiveTab('products')}
-              className="btn btn-primary"
-            >
-              <Package className="w-4 h-4" />
-              Manage Products
-            </button>
-            <button
-              onClick={() => setActiveTab('users')}
-              className="btn btn-secondary"
-            >
-              <Users className="w-4 h-4" />
-              Manage Users
-            </button>
-            <button
-              onClick={() => setActiveTab('reports')}
-              className="btn btn-success"
-            >
-              <BarChart3 className="w-4 h-4" />
-              View Reports
-            </button>
-            <button
-              onClick={handleCreateBackup}
-              disabled={loading}
-              className="btn btn-outline"
-            >
-              <Database className="w-4 h-4" />
-              Create Backup
-            </button>
-          </div>
-        </div>
-
-        <div className="card">
-          <h3 className="card-title mb-4">System Status</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Database Status</span>
-              <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">Online</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Backup System</span>
-              <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">Active</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Memory Usage</span>
-              <span className="text-sm text-gray-800">
-                {Math.round((dashboardData.server?.memory?.used || 0) / 1024 / 1024)}MB
-              </span>
-            </div>
-          </div>
-        </div>
+      <div className="flex justify-between items-center">
+        <span className="text-gray-600">Backup System</span>
+        <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-sm">Active</span>
+      </div>
+      <div className="flex justify-between items-center">
+        <span className="text-gray-600">Memory Usage</span>
+        <span className="text-sm text-gray-800">
+          {Math.round((dashboardData.server?.memory?.used || 0) / 1024 / 1024)}MB
+        </span>
       </div>
     </div>
+  </div>
+</div>
+    </div >
   );
 
-  const renderProducts = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Product Management</h2>
-        <button
-          onClick={() => {
-            setEditingProduct(null);
-            setShowProductModal(true);
-          }}
-          className="btn btn-primary"
-        >
-          <Plus className="w-4 h-4" />
-          Add Product
-        </button>
-      </div>
+const renderProducts = () => (
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <h2 className="text-2xl font-bold text-gray-900">Product Management</h2>
+      <button
+        onClick={() => {
+          setEditingProduct(null);
+          setShowProductModal(true);
+        }}
+        className="btn btn-primary"
+      >
+        <Plus className="w-4 h-4" />
+        Add Product
+      </button>
+    </div>
 
-      <div className="card">
-        <div className="overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Barcode</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map(product => (
-                <tr key={product.id}>
-                  <td className="font-medium">{product.name}</td>
-                  <td className="text-sm text-gray-600">{product.barcode || 'N/A'}</td>
-                  <td className="text-sm">{product.category || 'N/A'}</td>
-                  <td className="font-medium">${product.price}</td>
-                  <td>
-                    <span className={`px-2 py-1 rounded text-sm ${
-                      product.stock > 10 ? 'bg-green-100 text-green-800' :
+    <div className="card">
+      <div className="overflow-x-auto">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Barcode</th>
+              <th>Category</th>
+              <th>Price</th>
+              <th>Stock</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.map(product => (
+              <tr key={product.id}>
+                <td className="font-medium">{product.name}</td>
+                <td className="text-sm text-gray-600">{product.barcode || 'N/A'}</td>
+                <td className="text-sm">{product.category || 'N/A'}</td>
+                <td className="font-medium">${product.price}</td>
+                <td>
+                  <span className={`px-2 py-1 rounded text-sm ${product.stock > 10 ? 'bg-green-100 text-green-800' :
                       product.stock > 0 ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
+                        'bg-red-100 text-red-800'
                     }`}>
-                      {product.stock}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingProduct(product);
-                          setShowProductModal(true);
-                        }}
-                        className="btn btn-outline btn-sm"
-                      >
-                        <Edit className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="btn btn-danger btn-sm"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderUsers = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
-        <button
-          onClick={() => {
-            setEditingUser(null);
-            setShowUserModal(true);
-          }}
-          className="btn btn-primary"
-        >
-          <Plus className="w-4 h-4" />
-          Add User
-        </button>
-      </div>
-
-      <div className="card">
-        <div className="overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Username</th>
-                <th>Full Name</th>
-                <th>Role</th>
-                <th>Created</th>
-                <th>Actions</th>
+                    {product.stock}
+                  </span>
+                </td>
+                <td>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingProduct(product);
+                        setShowProductModal(true);
+                      }}
+                      className="btn btn-outline btn-sm"
+                    >
+                      <Edit className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      className="btn btn-danger btn-sm"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {users.map(user => (
-                <tr key={user.id}>
-                  <td className="font-medium">{user.username}</td>
-                  <td>{user.full_name || 'N/A'}</td>
-                  <td>
-                    <span className={`px-2 py-1 rounded text-sm capitalize ${
-                      user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {user.role}
-                    </span>
-                  </td>
-                  <td className="text-sm text-gray-600">
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </td>
-                  <td>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setEditingUser(user);
-                          setShowUserModal(true);
-                        }}
-                        className="btn btn-outline btn-sm"
-                      >
-                        <Edit className="w-3 h-3" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="btn btn-danger btn-sm"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
-  );
+  </div>
+);
 
-  const renderReports = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Sales Reports</h2>
+const renderUsers = () => (
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <h2 className="text-2xl font-bold text-gray-900">User Management</h2>
+      <button
+        onClick={() => {
+          setEditingUser(null);
+          setShowUserModal(true);
+        }}
+        className="btn btn-primary"
+      >
+        <Plus className="w-4 h-4" />
+        Add User
+      </button>
+    </div>
 
-      {salesData.summary && (
-        <div className="stats-grid">
-          <div className="stat-card">
-            <p className="stat-label">Total Sales</p>
-            <p className="stat-value">{salesData.summary.total_sales || 0}</p>
-          </div>
-          <div className="stat-card">
-            <p className="stat-label">Total Revenue</p>
-            <p className="stat-value">${salesData.summary.total_revenue || '0.00'}</p>
-          </div>
-          <div className="stat-card">
-            <p className="stat-label">Average Sale</p>
-            <p className="stat-value">${salesData.summary.average_sale || '0.00'}</p>
-          </div>
-          <div className="stat-card">
-            <p className="stat-label">Total Tax</p>
-            <p className="stat-value">${salesData.summary.total_tax || '0.00'}</p>
+    <div className="card">
+      <div className="overflow-x-auto">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Full Name</th>
+              <th>Role</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map(user => (
+              <tr key={user.id}>
+                <td className="font-medium">{user.username}</td>
+                <td>{user.full_name || 'N/A'}</td>
+                <td>
+                  <span className={`px-2 py-1 rounded text-sm capitalize ${user.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                    {user.role}
+                  </span>
+                </td>
+                <td className="text-sm text-gray-600">
+                  {new Date(user.created_at).toLocaleDateString()}
+                </td>
+                <td>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        setEditingUser(user);
+                        setShowUserModal(true);
+                      }}
+                      className="btn btn-outline btn-sm"
+                    >
+                      <Edit className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="btn btn-danger btn-sm"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+);
+
+const renderReports = () => (
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold text-gray-900">Sales Reports</h2>
+
+    {salesData.summary && (
+      <div className="stats-grid">
+        <div className="stat-card">
+          <p className="stat-label">Total Sales</p>
+          <p className="stat-value">{salesData.summary.total_sales || 0}</p>
+        </div>
+        <div className="stat-card">
+          <p className="stat-label">Total Revenue</p>
+          <p className="stat-value">${salesData.summary.total_revenue || '0.00'}</p>
+        </div>
+        <div className="stat-card">
+          <p className="stat-label">Average Sale</p>
+          <p className="stat-value">${salesData.summary.average_sale || '0.00'}</p>
+        </div>
+        <div className="stat-card">
+          <p className="stat-label">Total Tax</p>
+          <p className="stat-value">${salesData.summary.total_tax || '0.00'}</p>
+        </div>
+      </div>
+    )}
+
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {salesData.payment_methods && (
+        <div className="card">
+          <h3 className="card-title mb-4">Payment Methods</h3>
+          <div className="space-y-2">
+            {salesData.payment_methods.map(method => (
+              <div key={method.payment_method} className="flex justify-between items-center">
+                <span className="capitalize">{method.payment_method}</span>
+                <div className="text-right">
+                  <div className="font-medium">${method.total}</div>
+                  <div className="text-sm text-gray-500">{method.count} sales</div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {salesData.payment_methods && (
-          <div className="card">
-            <h3 className="card-title mb-4">Payment Methods</h3>
-            <div className="space-y-2">
-              {salesData.payment_methods.map(method => (
-                <div key={method.payment_method} className="flex justify-between items-center">
-                  <span className="capitalize">{method.payment_method}</span>
-                  <div className="text-right">
-                    <div className="font-medium">${method.total}</div>
-                    <div className="text-sm text-gray-500">{method.count} sales</div>
-                  </div>
+      {salesData.top_products && (
+        <div className="card">
+          <h3 className="card-title mb-4">Top Products</h3>
+          <div className="space-y-2">
+            {salesData.top_products.slice(0, 5).map(product => (
+              <div key={product.name} className="flex justify-between items-center">
+                <span className="text-sm">{product.name}</span>
+                <div className="text-right">
+                  <div className="font-medium">{product.total_sold} sold</div>
+                  <div className="text-sm text-gray-500">${product.total_revenue}</div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
-        )}
-
-        {salesData.top_products && (
-          <div className="card">
-            <h3 className="card-title mb-4">Top Products</h3>
-            <div className="space-y-2">
-              {salesData.top_products.slice(0, 5).map(product => (
-                <div key={product.name} className="flex justify-between items-center">
-                  <span className="text-sm">{product.name}</span>
-                  <div className="text-right">
-                    <div className="font-medium">{product.total_sold} sold</div>
-                    <div className="text-sm text-gray-500">${product.total_revenue}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="card">
-        <h3 className="card-title mb-4">Recent Sales</h3>
-        <div className="overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Sale ID</th>
-                <th>Cashier</th>
-                <th>Total</th>
-                <th>Payment</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {salesHistory.slice(0, 10).map(sale => (
-                <tr key={sale.id}>
-                  <td>#{sale.id}</td>
-                  <td>{sale.cashier_name}</td>
-                  <td className="font-medium">${sale.total_amount}</td>
-                  <td className="capitalize">{sale.payment_method}</td>
-                  <td className="text-sm text-gray-600">
-                    {new Date(sale.created_at).toLocaleString()}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
+      )}
+    </div>
+
+    <div className="card">
+      <h3 className="card-title mb-4">Recent Sales</h3>
+      <div className="overflow-x-auto">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Sale ID</th>
+              <th>Cashier</th>
+              <th>Total</th>
+              <th>Payment</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            {salesHistory.slice(0, 10).map(sale => (
+              <tr key={sale.id}>
+                <td>#{sale.id}</td>
+                <td>{sale.cashier_name}</td>
+                <td className="font-medium">${sale.total_amount}</td>
+                <td className="capitalize">{sale.payment_method}</td>
+                <td className="text-sm text-gray-600">
+                  {new Date(sale.created_at).toLocaleString()}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
-  );
+  </div>
+);
 
-  const renderSettings = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">System Settings</h2>
+const renderSettings = () => (
+  <div className="space-y-6">
+    <h2 className="text-2xl font-bold text-gray-900">System Settings</h2>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card">
-          <h3 className="card-title mb-4">Store Information</h3>
-          <div className="space-y-4">
-            <div className="form-group">
-              <label className="form-label">Store Name</label>
-              <input
-                type="text"
-                value={settings.company_name?.value || ''}
-                onChange={(e) => updateSetting('company_name', e.target.value)}
-                className="form-input"
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Store Address</label>
-              <textarea
-                value={settings.company_address?.value || ''}
-                onChange={(e) => updateSetting('company_address', e.target.value)}
-                className="form-input"
-                rows="3"
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Receipt Footer</label>
-              <input
-                type="text"
-                value={settings.receipt_footer?.value || ''}
-                onChange={(e) => updateSetting('receipt_footer', e.target.value)}
-                className="form-input"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <h3 className="card-title mb-4">Tax & Currency</h3>
-          <div className="space-y-4">
-            <div className="form-group">
-              <label className="form-label">Tax Rate (%)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={settings.tax_rate?.value || ''}
-                onChange={(e) => updateSetting('tax_rate', e.target.value)}
-                className="form-input"
-              />
-            </div>
-            <div className="form-group">
-              <label className="form-label">Currency</label>
-              <select
-                value={settings.currency?.value || 'USD'}
-                onChange={(e) => updateSetting('currency', e.target.value)}
-                className="form-select"
-              >
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div className="card">
-        <h3 className="card-title mb-4">Backup Settings</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <h3 className="card-title mb-4">Store Information</h3>
+        <div className="space-y-4">
           <div className="form-group">
-            <label className="form-label">Backup Interval (minutes)</label>
+            <label className="form-label">Store Name</label>
             <input
-              type="number"
-              value={settings.backup_interval?.value || ''}
-              onChange={(e) => updateSetting('backup_interval', e.target.value)}
+              type="text"
+              value={settings.company_name?.value || ''}
+              onChange={(e) => updateSetting('company_name', e.target.value)}
               className="form-input"
             />
           </div>
           <div className="form-group">
-            <label className="form-label">Backup Retention (days)</label>
+            <label className="form-label">Store Address</label>
+            <textarea
+              value={settings.company_address?.value || ''}
+              onChange={(e) => updateSetting('company_address', e.target.value)}
+              className="form-input"
+              rows="3"
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Receipt Footer</label>
             <input
-              type="number"
-              value={settings.backup_retention?.value || ''}
-              onChange={(e) => updateSetting('backup_retention', e.target.value)}
+              type="text"
+              value={settings.receipt_footer?.value || ''}
+              onChange={(e) => updateSetting('receipt_footer', e.target.value)}
               className="form-input"
             />
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end">
-        <button
-          onClick={handleSaveSettings}
-          disabled={loading}
-          className="btn btn-primary"
-        >
-          {loading ? (
-            <>
-              <div className="spinner"></div>
-              Saving...
-            </>
-          ) : (
-            'Save Settings'
-          )}
-        </button>
-      </div>
-    </div>
-  );
-
-  const renderBackup = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Database Backup</h2>
-        <button
-          onClick={handleCreateBackup}
-          disabled={loading}
-          className="btn btn-primary"
-        >
-          <Database className="w-4 h-4" />
-          Create Backup
-        </button>
-      </div>
-
       <div className="card">
-        <h3 className="card-title mb-4">Available Backups</h3>
-        <div className="overflow-x-auto">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>Filename</th>
-                <th>Size</th>
-                <th>Created</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {backups.map(backup => (
-                <tr key={backup.filename}>
-                  <td className="font-medium">{backup.filename}</td>
-                  <td>{Math.round(backup.size / 1024)} KB</td>
-                  <td className="text-sm text-gray-600">
-                    {new Date(backup.created_at).toLocaleString()}
-                  </td>
-                  <td>
-                    <button
-                      onClick={() => handleRestoreBackup(backup.filename)}
-                      className="btn btn-outline btn-sm"
-                    >
-                      Restore
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Helper functions
-  const updateSetting = (key, value) => {
-    setSettings(prev => ({
-      ...prev,
-      [key]: { ...prev[key], value }
-    }));
-  };
-
-  const handleSaveSettings = async () => {
-    setLoading(true);
-    try {
-      const settingsToSave = {};
-      Object.keys(settings).forEach(key => {
-        settingsToSave[key] = settings[key].value;
-      });
-
-      await axios.put('/api/settings', { settings: settingsToSave });
-      toast.success('Settings saved successfully');
-    } catch (error) {
-      toast.error('Failed to save settings');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteProductDuplicate = async (productId) => {
-    if (!window.confirm('Are you sure you want to delete this product?')) return;
-
-    try {
-      await axios.delete(`/api/products/${productId}`);
-      toast.success('Product deleted successfully');
-      fetchProducts();
-    } catch (error) {
-      const message = error.response?.data?.error || 'Failed to delete product';
-      toast.error(message);
-    }
-  };
-
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
-
-    try {
-      await axios.delete(`/api/users/${userId}`);
-      toast.success('User deleted successfully');
-      fetchUsers();
-    } catch (error) {
-      const message = error.response?.data?.error || 'Failed to delete user';
-      toast.error(message);
-    }
-  };
-
-  const handleRestoreBackup = async (filename) => {
-    if (!window.confirm('Are you sure you want to restore this backup? This will overwrite the current database.')) return;
-
-    setLoading(true);
-    try {
-      await axios.post(`/api/backup/restore/${filename}`);
-      toast.success('Backup restored successfully');
-      fetchBackups();
-    } catch (error) {
-      toast.error('Failed to restore backup');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sidebarItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'products', label: 'Products', icon: Package },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'reports', label: 'Reports', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Settings },
-    { id: 'backup', label: 'Backup', icon: Database },
-  ];
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">POS Admin Panel</h1>
-              <p className="text-sm text-gray-600">Welcome, {user?.full_name || user?.username}</p>
-            </div>
-            <button onClick={logout} className="btn btn-secondary">
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
+        <h3 className="card-title mb-4">Tax & Currency</h3>
+        <div className="space-y-4">
+          <div className="form-group">
+            <label className="form-label">Tax Rate (%)</label>
+            <input
+              type="number"
+              step="0.1"
+              value={settings.tax_rate?.value || ''}
+              onChange={(e) => updateSetting('tax_rate', e.target.value)}
+              className="form-input"
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Currency</label>
+            <select
+              value={settings.currency?.value || 'USD'}
+              onChange={(e) => updateSetting('currency', e.target.value)}
+              className="form-select"
+            >
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+              <option value="GBP">GBP (£)</option>
+            </select>
           </div>
         </div>
-      </header>
-
-      <div className="dashboard">
-        {/* Sidebar */}
-        <aside className="sidebar">
-          <nav>
-            <ul className="sidebar-nav">
-              {sidebarItems.map(item => {
-                const Icon = item.icon;
-                return (
-                  <li key={item.id}>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full text-left flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all ${activeTab === item.id ? 'bg-blue-50 text-blue-600 border-r-3 border-blue-600' : ''}`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      {item.label}
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="main-content">
-          {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'products' && renderProducts()}
-          {activeTab === 'users' && renderUsers()}
-          {activeTab === 'reports' && renderReports()}
-          {activeTab === 'settings' && renderSettings()}
-          {activeTab === 'backup' && renderBackup()}
-        </main>
       </div>
     </div>
-  );
+
+    <div className="card">
+      <h3 className="card-title mb-4">Backup Settings</h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="form-group">
+          <label className="form-label">Backup Interval (minutes)</label>
+          <input
+            type="number"
+            value={settings.backup_interval?.value || ''}
+            onChange={(e) => updateSetting('backup_interval', e.target.value)}
+            className="form-input"
+          />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Backup Retention (days)</label>
+          <input
+            type="number"
+            value={settings.backup_retention?.value || ''}
+            onChange={(e) => updateSetting('backup_retention', e.target.value)}
+            className="form-input"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div className="flex justify-end">
+      <button
+        onClick={handleSaveSettings}
+        disabled={loading}
+        className="btn btn-primary"
+      >
+        {loading ? (
+          <>
+            <div className="spinner"></div>
+            Saving...
+          </>
+        ) : (
+          'Save Settings'
+        )}
+      </button>
+    </div>
+  </div>
+);
+
+const renderBackup = () => (
+  <div className="space-y-6">
+    <div className="flex justify-between items-center">
+      <h2 className="text-2xl font-bold text-gray-900">Database Backup</h2>
+      <button
+        onClick={handleCreateBackup}
+        disabled={loading}
+        className="btn btn-primary"
+      >
+        <Database className="w-4 h-4" />
+        Create Backup
+      </button>
+    </div>
+
+    <div className="card">
+      <h3 className="card-title mb-4">Available Backups</h3>
+      <div className="overflow-x-auto">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Filename</th>
+              <th>Size</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {backups.map(backup => (
+              <tr key={backup.filename}>
+                <td className="font-medium">{backup.filename}</td>
+                <td>{Math.round(backup.size / 1024)} KB</td>
+                <td className="text-sm text-gray-600">
+                  {new Date(backup.created_at).toLocaleString()}
+                </td>
+                <td>
+                  <button
+                    onClick={() => handleRestoreBackup(backup.filename)}
+                    className="btn btn-outline btn-sm"
+                  >
+                    Restore
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+);
+
+// Helper functions
+const updateSetting = (key, value) => {
+  setSettings(prev => ({
+    ...prev,
+    [key]: { ...prev[key], value }
+  }));
+};
+
+const handleSaveSettings = async () => {
+  setLoading(true);
+  try {
+    const settingsToSave = {};
+    Object.keys(settings).forEach(key => {
+      settingsToSave[key] = settings[key].value;
+    });
+
+    await axios.put('/api/settings', { settings: settingsToSave });
+    toast.success('Settings saved successfully');
+  } catch (error) {
+    toast.error('Failed to save settings');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleDeleteProductDuplicate = async (productId) => {
+  if (!window.confirm('Are you sure you want to delete this product?')) return;
+
+  try {
+    await axios.delete(`/api/products/${productId}`);
+    toast.success('Product deleted successfully');
+    fetchProducts();
+  } catch (error) {
+    const message = error.response?.data?.error || 'Failed to delete product';
+    toast.error(message);
+  }
+};
+
+const handleDeleteUser = async (userId) => {
+  if (!window.confirm('Are you sure you want to delete this user?')) return;
+
+  try {
+    await axios.delete(`/api/users/${userId}`);
+    toast.success('User deleted successfully');
+    fetchUsers();
+  } catch (error) {
+    const message = error.response?.data?.error || 'Failed to delete user';
+    toast.error(message);
+  }
+};
+
+const handleRestoreBackup = async (filename) => {
+  if (!window.confirm('Are you sure you want to restore this backup? This will overwrite the current database.')) return;
+
+  setLoading(true);
+  try {
+    await axios.post(`/api/backup/restore/${filename}`);
+    toast.success('Backup restored successfully');
+    fetchBackups();
+  } catch (error) {
+    toast.error('Failed to restore backup');
+  } finally {
+    setLoading(false);
+  }
+};
+
+const sidebarItems = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { id: 'products', label: 'Products', icon: Package },
+  { id: 'users', label: 'Users', icon: Users },
+  { id: 'reports', label: 'Reports', icon: BarChart3 },
+  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'backup', label: 'Backup', icon: Database },
+];
+
+return (
+  <div className="min-h-screen bg-gray-50">
+    {/* Header */}
+    <header className="bg-white shadow-sm border-b">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center py-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">POS Admin Panel</h1>
+            <p className="text-sm text-gray-600">Welcome, {user?.full_name || user?.username}</p>
+          </div>
+          <button onClick={logout} className="btn btn-secondary">
+            <LogOut className="w-4 h-4" />
+            Logout
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div className="dashboard">
+      {/* Sidebar */}
+      <aside className="sidebar">
+        <nav>
+          <ul className="sidebar-nav">
+            {sidebarItems.map(item => {
+              const Icon = item.icon;
+              return (
+                <li key={item.id}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full text-left flex items-center gap-3 px-4 py-3 text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all ${activeTab === item.id ? 'bg-blue-50 text-blue-600 border-r-3 border-blue-600' : ''}`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {item.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      </aside>
+
+      {/* Main Content */}
+      <main className="main-content">
+        {activeTab === 'dashboard' && renderDashboard()}
+        {activeTab === 'products' && renderProducts()}
+        {activeTab === 'users' && renderUsers()}
+        {activeTab === 'reports' && renderReports()}
+        {activeTab === 'settings' && renderSettings()}
+        {activeTab === 'backup' && renderBackup()}
+      </main>
+    </div>
+  </div>
+);
 };
 
 export default AdminDashboard;

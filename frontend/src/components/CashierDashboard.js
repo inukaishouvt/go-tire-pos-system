@@ -56,6 +56,11 @@ const CashierDashboard = () => {
   const [isVatExempt, setIsVatExempt] = useState(false);
   const [paymentDeadline, setPaymentDeadline] = useState('');
 
+  // Validation state
+  const [showOverrideLogin, setShowOverrideLogin] = useState(false);
+  const [overrideUsername, setOverrideUsername] = useState('');
+  const [overridePassword, setOverridePassword] = useState('');
+
   // Currency formatting helper
   const formatCurrency = (amount) => {
     const currency = settings.currency?.value || 'PHP';
@@ -69,8 +74,133 @@ const CashierDashboard = () => {
     return `${symbol}${parseFloat(amount || 0).toFixed(2)}`;
   };
 
-  // Admin override barcode (secret)
-  const ADMIN_OVERRIDE_BARCODE = 'ADMIN_OVERRIDE_2024';
+  // Admin override handler
+  const handleOverrideLogin = async (e) => {
+    e.preventDefault();
+    try {
+      // Direct login check for admin connection
+      const response = await axios.post('/api/auth/login', {
+        username: overrideUsername,
+        password: overridePassword
+      });
+
+      if (response.data.user.role === 'admin') {
+        setAdminOverride(true);
+        toast.success('Admin override enabled successfully');
+        setShowOverrideLogin(false);
+        setOverrideUsername('');
+        setOverridePassword('');
+      } else {
+        toast.error('Provided account is not an admin');
+      }
+    } catch (error) {
+      toast.error('Invalid credentials');
+    }
+  };
+
+  const printReceipt = () => {
+    if (!lastSale) return;
+
+    const printWindow = window.open('', '_blank', 'width=800,height=1000');
+    // A4 / Bond Paper Styles
+    const receiptHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt #${lastSale.sale.id}</title>
+        <style>
+          @page { size: auto; margin: 20mm; }
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+          .header h1 { font-size: 24px; font-weight: bold; margin: 0 0 10px 0; color: #000; text-transform: uppercase; }
+          .header p { margin: 2px 0; font-size: 14px; }
+          .meta-info { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+          .meta-left { text-align: left; }
+          .meta-right { text-align: right; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th { text-align: left; border-bottom: 2px solid #ddd; padding: 10px; font-weight: bold; text-transform: uppercase; font-size: 12px; }
+          td { border-bottom: 1px solid #eee; padding: 10px; vertical-align: top; }
+          .text-right { text-align: right; }
+          .totals { margin-left: auto; width: 300px; }
+          .total-row { display: flex; justify-content: space-between; padding: 5px 0; }
+          .grand-total { font-weight: bold; font-size: 16px; border-top: 2px solid #000; margin-top: 10px; padding-top: 10px; }
+          .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 20px; }
+          .brand-logo { font-weight: bold; font-size: 18px; margin-bottom: 5px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>${settings.company_name?.value || 'Go Tire POS'}</h1>
+          <p>${settings.company_address?.value || ''}</p>
+          <p>Tel: ${settings.phone?.value || ''}</p>
+        </div>
+
+        <div class="meta-info">
+          <div class="meta-left">
+            <p><strong>Customer:</strong> ${lastSale.sale.customer_name || 'Walk-in'}</p>
+            <p><strong>Cashier:</strong> ${lastSale.sale.cashier_name}</p>
+          </div>
+          <div class="meta-right">
+            <p><strong>Receipt #:</strong> ${lastSale.sale.id.toString().padStart(6, '0')}</p>
+            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Item Description</th>
+              <th class="text-right">Qty</th>
+              <th class="text-right">Unit Price</th>
+              <th class="text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lastSale.items.map(item => `
+              <tr>
+                <td>
+                  <div style="font-weight:bold;">${item.product_name}</div>
+                  <div style="font-size:11px; color:#666;">${item.brand || ''} ${item.tire_size ? item.tire_size.replace(/\?/g, ' ') : ''}</div>
+                </td>
+                <td class="text-right">${item.quantity}</td>
+                <td class="text-right">${formatCurrency(item.unit_price)}</td>
+                <td class="text-right">${formatCurrency(item.total_price)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="totals">
+          <div class="total-row"><span>Subtotal:</span><span>${formatCurrency(lastSale.receipt_data?.subtotal || 0)}</span></div>
+          ${lastSale.receipt_data?.discount_amount > 0 ? `
+          <div class="total-row" style="color:red;"><span>Discount:</span><span>-${formatCurrency(lastSale.receipt_data.discount_amount)}</span></div>
+          ` : ''}
+          <div class="total-row"><span>VAT (${isVatExempt ? '0' : (settings.vat_rate?.value || 12)}%):</span><span>${formatCurrency(lastSale.receipt_data?.tax_amount || 0)}</span></div>
+          <div class="total-row grand-total"><span>TOTAL:</span><span>${formatCurrency(lastSale.receipt_data?.total_amount || 0)}</span></div>
+          <br/>
+          <div class="total-row"><span>Payment Method:</span><span>${(lastSale.sale.payment_method || 'Cash').toUpperCase()}</span></div>
+          <div class="total-row"><span>Amount Paid:</span><span>${formatCurrency(lastSale.sale.payment_received || lastSale.sale.amount_paid || 0)}</span></div>
+          <div class="total-row"><span>Change:</span><span>${formatCurrency(Math.max(0, (lastSale.sale.payment_received || lastSale.sale.amount_paid || 0) - lastSale.receipt_data.total_amount))}</span></div>
+          
+           ${(lastSale.sale.total_amount - lastSale.sale.amount_paid) > 0.01 ? `
+            <div class="total-row" style="color:orange; font-weight:bold; border-top:1px dashed #ccc; margin-top:5px; padding-top:5px;">
+              <span>Balance Due:</span><span>${formatCurrency(lastSale.sale.total_amount - lastSale.sale.amount_paid)}</span>
+            </div>
+          ` : ''}
+        </div>
+
+        <div class="footer">
+          <p>${settings.receipt_footer?.value || 'Thank you for your business!'}</p>
+          <p style="font-size:10px; margin-top:5px;">System Generated Receipt</p>
+        </div>
+      </body>
+      </html>
+    `;
+    printWindow.document.write(receiptHTML);
+    printWindow.document.close();
+    printWindow.onload = () => { printWindow.focus(); printWindow.print(); };
+  };
 
   const fetchProducts = async () => {
     try {
@@ -205,18 +335,10 @@ const CashierDashboard = () => {
     e.preventDefault();
     if (!barcode.trim()) return;
 
-    // Check for admin override barcode
-    if (barcode === ADMIN_OVERRIDE_BARCODE) {
-      if (user.role === 'admin') {
-        setAdminOverride(true);
-        toast.success('Admin override activated');
-      } else {
-        toast.error('Access denied');
-      }
+    // Check for admin override trigger (hidden shortcut)
+    if (barcode === 'ADMIN_LOGIN') {
+      setShowOverrideLogin(true);
       setBarcode('');
-      if (barcodeInputRef.current) {
-        barcodeInputRef.current.focus();
-      }
       return;
     }
 
@@ -360,8 +482,14 @@ const CashierDashboard = () => {
       return;
     }
 
-    if (paymentMethod === 'cash' && paymentAmount < parseFloat(totals.total)) {
+    // Only validate full payment if NOT a partial payment
+    if (!isPartialPayment && paymentMethod === 'cash' && paymentAmount < parseFloat(totals.total)) {
       toast.error('Insufficient payment amount');
+      return;
+    }
+
+    if (isPartialPayment && (!amountPaid || parseFloat(amountPaid) <= 0)) {
+      toast.error('Please enter a valid downpayment amount');
       return;
     }
 
@@ -703,9 +831,15 @@ const CashierDashboard = () => {
                   <h4 className="font-bold text-yellow-900 mb-2 flex items-center gap-2">
                     🔒 Cashier Account
                   </h4>
-                  <p className="text-sm text-yellow-800 font-medium">
-                    Price editing and discounts are restricted. Scan barcode <span className="font-mono bg-yellow-200 px-1 rounded text-yellow-900">ADMIN_OVERRIDE_2024</span> to enable admin override.
+                  <p className="text-sm text-yellow-800 font-medium mb-3">
+                    Price editing and discounts are restricted.
                   </p>
+                  <button
+                    onClick={() => setShowOverrideLogin(true)}
+                    className="w-full px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 font-bold text-sm"
+                  >
+                    Enable Admin Override
+                  </button>
                 </div>
               )}
             </div>
@@ -1087,6 +1221,60 @@ const CashierDashboard = () => {
         </div>
       </div>
 
+      {/* Admin Override Login Modal */}
+      {showOverrideLogin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Admin Override</h3>
+            <p className="text-gray-600 mb-4 text-sm">Enter admin credentials to unlock pricing controls.</p>
+            <form onSubmit={handleOverrideLogin}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                  <input
+                    type="text"
+                    required
+                    value={overrideUsername}
+                    onChange={(e) => setOverrideUsername(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={overridePassword}
+                    onChange={(e) => setOverridePassword(e.target.value)}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowOverrideLogin(false);
+                    setOverrideUsername('');
+                    setOverridePassword('');
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-bold"
+                >
+                  Unlock
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Receipt Modal */}
       <div
         className="modal-overlay"
@@ -1095,95 +1283,20 @@ const CashierDashboard = () => {
         <div className="modal-content">
           <div className="modal-header">
             <h3 className="modal-title">Receipt</h3>
-            <button
-              onClick={() => setShowReceipt(false)}
-              className="modal-close"
-            >
-              ×
-            </button>
+            <button onClick={() => setShowReceipt(false)} className="modal-close">×</button>
           </div>
 
-          <div className="receipt">
-            <div className="receipt-header">
-              <h3>Go Tire Car Care Center</h3>
-              <p>B2 L18-B Camarin Road, Camarin Rd, Caloocan, 1400 Metro Manila</p>
-              <p>================================</p>
-              <p>Sale ID: #{lastSale?.sale?.id}</p>
-              <p>Date: {lastSale?.sale?.created_at ? new Date(lastSale.sale.created_at).toLocaleDateString() : ''}</p>
-              <p>Time: {lastSale?.sale?.created_at ? new Date(lastSale.sale.created_at).toLocaleTimeString() : ''}</p>
-              <p>Cashier: {lastSale?.sale?.cashier_name}</p>
-              <p>================================</p>
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Receipt className="w-8 h-8 text-green-600" />
             </div>
-
-            <div className="receipt-items">
-              {lastSale?.items?.map(item => (
-                <div key={item.id} className="receipt-item">
-                  <div style={{ flex: 1 }}>
-                    <div className="product-name">{item.product_name}</div>
-                    <div className="product-details">
-                      Qty: {item.quantity} @ {formatCurrency(item.unit_price)}
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right', fontWeight: 'bold' }}>
-                    {formatCurrency(item.total_price)}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="receipt-total">
-              <div className="receipt-item">
-                <span>Subtotal:</span>
-                <span>{formatCurrency(lastSale?.receipt_data?.subtotal)}</span>
-              </div>
-              {parseFloat(lastSale?.receipt_data?.discount_amount) > 0 && (
-                <div className="receipt-item">
-                  <span>Discount:</span>
-                  <span>-{formatCurrency(lastSale.receipt_data.discount_amount)}</span>
-                </div>
-              )}
-              <div className="receipt-item">
-                <span>VAT ({parseFloat(settings.vat_rate?.value || 12)}%):</span>
-                <span>{formatCurrency(lastSale?.receipt_data?.vat_amount || lastSale?.receipt_data?.tax_amount)}</span>
-              </div>
-              <div className="receipt-item">
-                <span>================================</span>
-              </div>
-              <div className="receipt-item">
-                <span><strong>TOTAL:</strong></span>
-                <span><strong>{formatCurrency(lastSale?.receipt_data?.total_amount)}</strong></span>
-              </div>
-              <div className="receipt-item">
-                <span>Payment ({lastSale?.sale?.payment_method?.toUpperCase()}):</span>
-                <span>{formatCurrency(lastSale?.receipt_data?.payment_received || lastSale?.receipt_data?.total_amount)}</span>
-              </div>
-              <div className="receipt-item">
-                <span>Change:</span>
-                <span>{formatCurrency(lastSale?.receipt_data?.change_given || 0)}</span>
-              </div>
-              {lastSale?.sale?.status === 'pending' && (
-                <div className="receipt-item" style={{ marginTop: '5px', color: 'red', fontWeight: 'bold' }}>
-                  <span>BALANCE DUE:</span>
-                  <span>{formatCurrency(parseFloat(lastSale.sale.total_amount) - parseFloat(lastSale.sale.amount_paid))}</span>
-                </div>
-              )}
-            </div>
-
-            <div className="receipt-footer">
-              <p>================================</p>
-              <p><strong>Thank you for your business!</strong></p>
-              <p>Drive safely! 🚗</p>
-              <p>Warranty: 30 days on parts</p>
-              <p>Returns: 7 days with receipt</p>
-              <p>================================</p>
-              <p>Auto Parts Center</p>
-              <p>Your trusted automotive partner</p>
-            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Sale Completed!</h2>
+            <p className="text-gray-600">Transaction #{lastSale?.sale?.id} recorded successfully.</p>
           </div>
 
           <div className="flex gap-2 mt-4">
             <button
-              onClick={() => printThermalReceipt()}
+              onClick={() => printReceipt()}
               className="btn btn-primary flex-1 print-button"
             >
               <Receipt className="w-4 h-4" />
@@ -1193,7 +1306,7 @@ const CashierDashboard = () => {
               onClick={() => setShowReceipt(false)}
               className="btn btn-outline flex-1"
             >
-              Close
+              New Sale
             </button>
           </div>
         </div>

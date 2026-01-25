@@ -257,8 +257,15 @@ const AdminDashboard = () => {
         setSalesPagination(historyResponse.data.pagination);
       }
     } catch (error) {
+      console.error(error);
       toast.error('Failed to load sales reports');
     }
+  };
+
+  // Helper to clean category names (remove ? and replace with space)
+  const cleanText = (text) => {
+    if (!text) return '';
+    return text.toString().replace(/\?/g, ' ');
   };
 
   const fetchSettings = async () => {
@@ -2014,7 +2021,7 @@ const AdminDashboard = () => {
                     {product.brand || 'N/A'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {product.tire_size || product.category || 'N/A'}
+                    {cleanText(product.tire_size || product.category || 'N/A')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
                     {formatCurrency(product.price)}
@@ -2249,76 +2256,108 @@ const AdminDashboard = () => {
     </div>
   );
 
-  const printThermalReceipt = () => {
+  const printReceipt = () => {
     if (!lastSale) return;
 
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
-    // Using hardcoded styles for thermal printer (80mm)
-    const thermalHTML = `
+    const printWindow = window.open('', '_blank', 'width=800,height=1000');
+    // A4 / Bond Paper Styles
+    const receiptHTML = `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Receipt</title>
+        <title>Receipt #${lastSale.sale.id}</title>
         <style>
-          @page { size: 80mm auto; margin: 0; }
-          body { font-family: 'Courier New', monospace; font-size: 12px; line-height: 1.2; margin: 0; padding: 5px; width: 80mm; background: white; }
-          .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
-          .header h1 { font-size: 14px; font-weight: bold; margin: 0 0 2px 0; text-transform: uppercase; }
-          .header p { margin: 1px 0; font-size: 10px; }
-          .separator { text-align: center; margin: 3px 0; font-size: 10px; }
-          .item { margin-bottom: 3px; font-size: 11px; }
-          .item-name { font-weight: bold; margin-bottom: 1px; }
-          .item-details { font-size: 9px; color: #666; margin-bottom: 1px; }
-          .item-total { text-align: right; font-weight: bold; }
-          .totals { border-top: 1px dashed #000; padding-top: 5px; margin-top: 5px; }
-          .total-line { display: flex; justify-content: space-between; margin-bottom: 2px; font-size: 11px; }
-          .total-line.final { font-size: 13px; font-weight: bold; border-top: 1px solid #000; padding-top: 3px; margin-top: 3px; }
-          .footer { text-align: center; margin-top: 10px; padding-top: 5px; border-top: 1px dashed #000; font-size: 9px; }
-          .footer p { margin: 1px 0; }
+          @page { size: auto; margin: 20mm; }
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
+          .header h1 { font-size: 24px; font-weight: bold; margin: 0 0 10px 0; color: #000; text-transform: uppercase; }
+          .header p { margin: 2px 0; font-size: 14px; }
+          .meta-info { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+          .meta-left { text-align: left; }
+          .meta-right { text-align: right; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th { text-align: left; border-bottom: 2px solid #ddd; padding: 10px; font-weight: bold; text-transform: uppercase; font-size: 12px; }
+          td { border-bottom: 1px solid #eee; padding: 10px; vertical-align: top; }
+          .text-right { text-align: right; }
+          .totals { margin-left: auto; width: 300px; }
+          .total-row { display: flex; justify-content: space-between; padding: 5px 0; }
+          .grand-total { font-weight: bold; font-size: 16px; border-top: 2px solid #000; margin-top: 10px; padding-top: 10px; }
+          .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 20px; }
+          .brand-logo { font-weight: bold; font-size: 18px; margin-bottom: 5px; }
         </style>
       </head>
       <body>
         <div class="header">
           <h1>${settings.company_name?.value || 'Go Tire POS'}</h1>
           <p>${settings.company_address?.value || ''}</p>
-          <div class="separator">================================</div>
-          <p>Sale ID: #${lastSale.sale.id}</p>
-          <p>Date: ${new Date(lastSale.sale.created_at).toLocaleDateString()}</p>
-          <p>Time: ${new Date(lastSale.sale.created_at).toLocaleTimeString()}</p>
-          <p>Cashier: ${lastSale.sale.cashier_name}</p>
-          <div class="separator">================================</div>
+          <p>Tel: ${settings.phone?.value || ''}</p>
         </div>
-        <div class="items">
-          ${lastSale.items.map(item => `
-            <div class="item">
-              <div class="item-name">${item.product_name}</div>
-              <div class="item-details">Qty: ${item.quantity} @ ${formatCurrency(item.unit_price)}</div>
-              <div class="item-total">${formatCurrency(item.total_price)}</div>
-            </div>
-          `).join('')}
+
+        <div class="meta-info">
+          <div class="meta-left">
+            <p><strong>Customer:</strong> ${lastSale.sale.customer_name || 'Walk-in'}</p>
+            <p><strong>Cashier:</strong> ${lastSale.sale.cashier_name}</p>
+          </div>
+          <div class="meta-right">
+            <p><strong>Receipt #:</strong> ${lastSale.sale.id.toString().padStart(6, '0')}</p>
+            <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+            <p><strong>Time:</strong> ${new Date().toLocaleTimeString()}</p>
+          </div>
         </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Item Description</th>
+              <th class="text-right">Qty</th>
+              <th class="text-right">Unit Price</th>
+              <th class="text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${lastSale.items.map(item => `
+              <tr>
+                <td>
+                  <div style="font-weight:bold;">${item.product_name}</div>
+                  <div style="font-size:11px; color:#666;">${item.brand || ''} ${cleanText(item.tire_size)}</div>
+                </td>
+                <td class="text-right">${item.quantity}</td>
+                <td class="text-right">${formatCurrency(item.unit_price)}</td>
+                <td class="text-right">${formatCurrency(item.total_price)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
         <div class="totals">
-          <div class="total-line"><span>Subtotal:</span><span>${formatCurrency(lastSale.receipt_data?.subtotal || 0)}</span></div>
-          {lastSale.receipt_data?.discount_amount > 0 && (
-            <div class="total-line"><span>Discount:</span><span>-${formatCurrency(lastSale.receipt_data?.discount_amount)}</span></div>
-          )}
-          <div class="total-line"><span>VAT (${isVatExempt ? '0' : (settings.vat_rate?.value || 12)}%):</span><span>${formatCurrency(lastSale.receipt_data?.tax_amount || 0)}</span></div>
-          <div class="separator">================================</div>
-          <div class="total-line final"><span>TOTAL:</span><span>${formatCurrency(lastSale.receipt_data?.total_amount || 0)}</span></div>
-          <div class="total-line"><span>Payment (${lastSale.sale.payment_method}):</span><span>${formatCurrency(lastSale.sale.payment_received || 0)}</span></div>
-          <div class="total-line"><span>Change:</span><span>${formatCurrency(lastSale.sale.change_given || 0)}</span></div>
+          <div class="total-row"><span>Subtotal:</span><span>${formatCurrency(lastSale.receipt_data?.subtotal || 0)}</span></div>
+          ${lastSale.receipt_data?.discount_amount > 0 ? `
+          <div class="total-row" style="color:red;"><span>Discount:</span><span>-${formatCurrency(lastSale.receipt_data.discount_amount)}</span></div>
+          ` : ''}
+          <div class="total-row"><span>VAT (${isVatExempt ? '0' : (settings.vat_rate?.value || 12)}%):</span><span>${formatCurrency(lastSale.receipt_data?.tax_amount || 0)}</span></div>
+          <div class="total-row grand-total"><span>TOTAL:</span><span>${formatCurrency(lastSale.receipt_data?.total_amount || 0)}</span></div>
+          <br/>
+          <div class="total-row"><span>Payment Method:</span><span>${(lastSale.sale.payment_method || 'Cash').toUpperCase()}</span></div>
+          <div class="total-row"><span>Amount Paid:</span><span>${formatCurrency(lastSale.sale.payment_received || lastSale.sale.amount_paid || 0)}</span></div>
+          <div class="total-row"><span>Change:</span><span>${formatCurrency(Math.max(0, (lastSale.sale.payment_received || lastSale.sale.amount_paid || 0) - lastSale.receipt_data.total_amount))}</span></div>
+          
+           ${(lastSale.sale.total_amount - lastSale.sale.amount_paid) > 0.01 ? `
+            <div class="total-row" style="color:orange; font-weight:bold; border-top:1px dashed #ccc; margin-top:5px; padding-top:5px;">
+              <span>Balance Due:</span><span>${formatCurrency(lastSale.sale.total_amount - lastSale.sale.amount_paid)}</span>
+            </div>
+          ` : ''}
         </div>
+
         <div class="footer">
-          <div class="separator">================================</div>
           <p>${settings.receipt_footer?.value || 'Thank you for your business!'}</p>
-          <div class="separator">================================</div>
+          <p style="font-size:10px; margin-top:5px;">System Generated Receipt</p>
         </div>
       </body>
       </html>
     `;
-    printWindow.document.write(thermalHTML);
+    printWindow.document.write(receiptHTML);
     printWindow.document.close();
-    printWindow.onload = () => { printWindow.focus(); printWindow.print(); printWindow.close(); };
+    printWindow.onload = () => { printWindow.focus(); printWindow.print(); };
   };
 
 
@@ -2390,7 +2429,7 @@ const AdminDashboard = () => {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Sale Completed!</h3>
               <p className="text-gray-600 mb-6">Transaction #{lastSale.sale.id} successful</p>
               <div className="flex gap-3 justify-center">
-                <button onClick={() => printThermalReceipt()} className="px-6 py-3 bg-gray-800 text-white rounded-lg font-bold hover:bg-gray-900 flex items-center gap-2">
+                <button onClick={() => printReceipt()} className="px-6 py-3 bg-gray-800 text-white rounded-lg font-bold hover:bg-gray-900 flex items-center gap-2">
                   <Printer className="w-5 h-5" /> Print Receipt
                 </button>
                 <button onClick={() => setShowReceipt(false)} className="px-6 py-3 border border-gray-300 rounded-lg font-bold hover:bg-gray-50">
@@ -2731,15 +2770,27 @@ const AdminDashboard = () => {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Payment Amount *
             </label>
-            <input
-              type="number"
-              step="0.01"
-              required
-              value={paymentAmount}
-              onChange={(e) => setPaymentAmount(e.target.value)}
-              placeholder="Enter payment amount"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="flex gap-2">
+              <input
+                type="number"
+                step="0.01"
+                required
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                placeholder="Enter payment amount"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const balance = (selectedSale?.total_amount || 0) - (selectedSale?.amount_paid || 0);
+                  setPaymentAmount(balance.toFixed(2));
+                }}
+                className="px-3 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 whitespace-nowrap text-sm font-bold"
+              >
+                Exact Amount
+              </button>
+            </div>
           </div>
 
           <div className="flex justify-end space-x-3 pt-4">

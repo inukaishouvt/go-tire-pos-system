@@ -31,8 +31,9 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
             return res.status(400).json({ error: 'Sale ID, amount, and payment method are required' });
         }
 
-        if (amount <= 0) {
-            return res.status(400).json({ error: 'Payment amount must be greater than 0' });
+        const paymentAmount = parseFloat(amount);
+        if (isNaN(paymentAmount) || paymentAmount <= 0) {
+            return res.status(400).json({ error: 'Payment amount must be a valid number greater than 0' });
         }
 
         const db = new Database();
@@ -45,10 +46,11 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
 
         // Calculate new amount paid
         const currentPaid = parseFloat(sale.amount_paid || 0);
-        const newPaid = currentPaid + parseFloat(amount);
-        const totalAmount = parseFloat(sale.total_amount);
+        const newPaid = currentPaid + paymentAmount;
+        const totalAmount = parseFloat(sale.total_amount || 0);
 
-        if (newPaid > totalAmount) {
+        // Allow slight float precision tolerance
+        if (newPaid > (totalAmount + 0.01)) {
             return res.status(400).json({
                 error: `Payment amount exceeds balance. Balance due: ${(totalAmount - currentPaid).toFixed(2)}`
             });
@@ -57,11 +59,12 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
         // Add payment record
         const result = await db.run(
             'INSERT INTO payments (sale_id, amount, payment_method, notes) VALUES (?, ?, ?, ?)',
-            [sale_id, amount, payment_method, notes || `Payment ${payment_method}`]
+            [sale_id, paymentAmount, payment_method, notes || `Payment ${payment_method}`]
         );
 
         // Update sale amount_paid and status
-        const newStatus = newPaid >= totalAmount ? 'completed' : 'pending';
+        const newStatus = newPaid >= (totalAmount - 0.01) ? 'completed' : 'pending';
+
         await db.run(
             'UPDATE sales SET amount_paid = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
             [newPaid, newStatus, sale_id]
@@ -69,16 +72,20 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
 
         // Get updated sale
         const updatedSale = await db.get('SELECT * FROM sales WHERE id = ?', [sale_id]);
-        const newPayment = await db.get('SELECT * FROM payments WHERE id = ?', [result.id]);
+
+        let newPayment = null;
+        if (result && result.id) {
+            newPayment = await db.get('SELECT * FROM payments WHERE id = ?', [result.id]);
+        }
 
         res.status(201).json({
-            payment: newPayment,
+            payment: newPayment || { id: result.id, sale_id, amount: paymentAmount, payment_method },
             sale: updatedSale,
-            balance_remaining: totalAmount - newPaid
+            balance_remaining: Math.max(0, totalAmount - newPaid)
         });
     } catch (error) {
         console.error('Add payment error:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        res.status(500).json({ error: `Internal server error: ${error.message}` });
     }
 });
 
