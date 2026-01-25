@@ -534,156 +534,93 @@ const CashierDashboard = () => {
     }
   };
 
-  const printThermalReceipt = () => {
-    if (!lastSale) return;
 
-    // Create a new window for printing
-    const printWindow = window.open('', '_blank', 'width=400,height=600');
-
-    // Generate thermal printer formatted HTML
-    const thermalHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Receipt</title>
-        <style>
-          @page {
-            size: 80mm auto;
-            margin: 0;
-          }
-          body {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.2;
-            margin: 0;
-            padding: 5px;
-            width: 80mm;
-            background: white;
-          }
-          .header {
-            text-align: center;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 5px;
-            margin-bottom: 5px;
-          }
-          .header h1 {
-            font-size: 14px;
-            font-weight: bold;
-            margin: 0 0 2px 0;
-            text-transform: uppercase;
-          }
-          .header p {
-            margin: 1px 0;
-            font-size: 10px;
-          }
-          .separator {
-            text-align: center;
-            margin: 3px 0;
-            font-size: 10px;
-          }
-          .item {
-            margin-bottom: 3px;
-            font-size: 11px;
-          }
-          .item-name {
-            font-weight: bold;
-            margin-bottom: 1px;
-          }
-          .item-details {
-            font-size: 9px;
-            color: #666;
-            margin-bottom: 1px;
-          }
-          .item-total {
-            text-align: right;
-            font-weight: bold;
-          }
           .totals {
-            border-top: 1px dashed #000;
-            padding-top: 5px;
-            margin-top: 5px;
-          }
-          .total-line {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 2px;
-            font-size: 11px;
-          }
-          .total-line.final {
-            font-size: 13px;
-            font-weight: bold;
-            border-top: 1px solid #000;
-            padding-top: 3px;
-            margin-top: 3px;
-          }
+  border - top: 1px dashed #000;
+  padding - top: 5px;
+  margin - top: 5px;
+}
+          .total - line {
+  display: flex;
+  justify - content: space - between;
+  margin - bottom: 2px;
+  font - size: 11px;
+}
+          .total - line.final {
+  font - size: 13px;
+  font - weight: bold;
+  border - top: 1px solid #000;
+  padding - top: 3px;
+  margin - top: 3px;
+}
           .footer {
-            text-align: center;
-            margin-top: 10px;
-            padding-top: 5px;
-            border-top: 1px dashed #000;
-            font-size: 9px;
-          }
+  text - align: center;
+  margin - top: 10px;
+  padding - top: 5px;
+  border - top: 1px dashed #000;
+  font - size: 9px;
+}
           .footer p {
-            margin: 1px 0;
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>Go Tire Car Care Center</h1>
-          <p>B2 L18-B Camarin Road, Camarin Rd, Caloocan, 1400 Metro Manila</p>
-          <div class="separator">================================</div>
-          <p>Sale ID: #${lastSale.sale.id}</p>
-          <p>Date: ${new Date(lastSale.sale.created_at).toLocaleDateString()}</p>
-          <p>Time: ${new Date(lastSale.sale.created_at).toLocaleTimeString()}</p>
-          <p>Cashier: ${lastSale.sale.cashier_name}</p>
-          <div class="separator">================================</div>
-        </div>
+  margin: 1px 0;
+}
+        </style >
+      </head >
+  <body>
+    <div class="header">
+      <h1>Go Tire Car Care Center</h1>
+      <p>B2 L18-B Camarin Road, Camarin Rd, Caloocan, 1400 Metro Manila</p>
+      <div class="separator">================================</div>
+      <p>Sale ID: #${lastSale.sale.id}</p>
+      <p>Date: ${new Date(lastSale.sale.created_at).toLocaleDateString()}</p>
+      <p>Time: ${new Date(lastSale.sale.created_at).toLocaleTimeString()}</p>
+      <p>Cashier: ${lastSale.sale.cashier_name}</p>
+      <div class="separator">================================</div>
+    </div>
 
-        <div class="items">
-          ${lastSale.items.map(item => `
+    <div class="items">
+      ${lastSale.items.map(item => `
             <div class="item">
               <div class="item-name">${item.product_name}</div>
               <div class="item-details">Qty: ${item.quantity} @ $${parseFloat(item.unit_price).toFixed(2)}</div>
               <div class="item-total">$${parseFloat(item.total_price).toFixed(2)}</div>
             </div>
           `).join('')}
-        </div>
+    </div>
 
-        <div class="totals">
-          <div class="total-line">
-            <span>Subtotal:</span>
-            <span>${formatCurrency(lastSale.receipt_data.subtotal)}</span>
-          </div>
-          <div class="total-line">
-            <span>VAT (${settings.vat_rate?.value || settings.tax_rate?.value || 12}%):</span>
-            <span>${formatCurrency(lastSale.receipt_data.tax_amount)}</span>
-          </div>
-          <div class="separator">================================</div>
-          <div class="total-line final">
-            <span>TOTAL:</span>
-            <span>${formatCurrency(lastSale.receipt_data.total_amount)}</span>
-          </div>
-          <div class="total-line">
-            <span>Payment (${lastSale.sale.payment_method.toUpperCase()}):</span>
-            <span>${formatCurrency(lastSale.receipt_data.payment_received || lastSale.receipt_data.total_amount)}</span>
-          </div>
-          <div class="total-line">
-            <span>Change:</span>
-            <span>${formatCurrency(lastSale.receipt_data.change_given || 0)}</span>
-          </div>
-        </div>
+    <div class="totals">
+      <div class="total-line">
+        <span>Subtotal:</span>
+        <span>${formatCurrency(lastSale.receipt_data.subtotal)}</span>
+      </div>
+      <div class="total-line">
+        <span>VAT (${settings.vat_rate?.value || settings.tax_rate?.value || 12}%):</span>
+        <span>${formatCurrency(lastSale.receipt_data.tax_amount)}</span>
+      </div>
+      <div class="separator">================================</div>
+      <div class="total-line final">
+        <span>TOTAL:</span>
+        <span>${formatCurrency(lastSale.receipt_data.total_amount)}</span>
+      </div>
+      <div class="total-line">
+        <span>Payment (${lastSale.sale.payment_method.toUpperCase()}):</span>
+        <span>${formatCurrency(lastSale.receipt_data.payment_received || lastSale.receipt_data.total_amount)}</span>
+      </div>
+      <div class="total-line">
+        <span>Change:</span>
+        <span>${formatCurrency(lastSale.receipt_data.change_given || 0)}</span>
+      </div>
+    </div>
 
-        <div class="footer">
-          <div class="separator">================================</div>
-          <p><strong>{settings.receipt_footer?.value || 'Thank you for your business!'}</strong></p>
-          <div class="separator">================================</div>
-          <p>${settings.company_name?.value || 'Go Tire Car Care Center'}</p>
-          <p>Your trusted automotive partner</p>
-        </div>
-      </body>
-      </html>
-    `;
+    <div class="footer">
+      <div class="separator">================================</div>
+      <p><strong>{settings.receipt_footer?.value || 'Thank you for your business!'}</strong></p>
+      <div class="separator">================================</div>
+      <p>${settings.company_name?.value || 'Go Tire Car Care Center'}</p>
+      <p>Your trusted automotive partner</p>
+    </div>
+  </body>
+      </html >
+  `;
 
     printWindow.document.write(thermalHTML);
     printWindow.document.close();
@@ -975,7 +912,7 @@ const CashierDashboard = () => {
                   {adminOverride && parseFloat(totals.discount) > 0 && (
                     <div className="flex justify-between mb-3 text-lg text-orange-600">
                       <span className="font-medium">
-                        Discount {totals.discountType === 'percentage' ? `(${overrideDiscount}%)` : '(Fixed)'}:
+                        Discount {totals.discountType === 'percentage' ? `(${ overrideDiscount } %)` : '(Fixed)'}:
                       </span>
                       <span className="font-semibold">-{formatCurrency(totals.discount)}</span>
                     </div>
@@ -1347,7 +1284,7 @@ const CashierDashboard = () => {
             </div>
             {searchTerm && (
               <p className="text-xs text-gray-500 mt-2">
-                {isSearching ? 'Searching...' : searchPagination.total > 0 ? `Found ${searchPagination.total} product${searchPagination.total !== 1 ? 's' : ''}` : 'No products found'}
+                {isSearching ? 'Searching...' : searchPagination.total > 0 ? `Found ${ searchPagination.total } product${ searchPagination.total !== 1 ? 's' : '' } ` : 'No products found'}
               </p>
             )}
           </div>
@@ -1368,8 +1305,9 @@ const CashierDashboard = () => {
                   {filteredProducts.map(product => (
                     <div
                       key={product.id}
-                      className={`p-3 border rounded cursor-pointer hover:bg-gray-50 transition-colors ${product.stock <= 0 ? 'opacity-50' : ''
-                        }`}
+                      className={`p - 3 border rounded cursor - pointer hover: bg - gray - 50 transition - colors ${
+  product.stock <= 0 ? 'opacity-50' : ''
+} `}
                       onClick={() => {
                         if (product.stock > 0) {
                           addToCart(product);
