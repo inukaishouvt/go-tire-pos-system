@@ -101,38 +101,40 @@ const CashierDashboard = () => {
   const printReceipt = () => {
     if (!lastSale) return;
 
-    const printWindow = window.open('', '_blank', 'width=800,height=1000');
-    // A4 / Bond Paper Styles
+    const printWindow = window.open('', '_blank', 'width=550,height=800');
+    // Half-sheet (approx 5.5in x 8.5in) Layout
     const receiptHTML = `
       <!DOCTYPE html>
       <html>
       <head>
         <title>Receipt #${lastSale.sale.id}</title>
         <style>
-          @page { size: auto; margin: 20mm; }
-          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 12px; line-height: 1.5; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 20px; }
-          .header h1 { font-size: 24px; font-weight: bold; margin: 0 0 10px 0; color: #000; text-transform: uppercase; }
-          .header p { margin: 2px 0; font-size: 14px; }
-          .meta-info { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 13px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+          @page { size: 5.5in 8.5in; margin: 10mm; }
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 11px; line-height: 1.4; color: #333; max-width: 5.5in; margin: 0 auto; padding: 10px; }
+          .sales-order { text-align: center; color: red; font-size: 18px; font-weight: bold; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }
+          .header { text-align: center; margin-bottom: 15px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+          .header h1 { font-size: 20px; font-weight: bold; margin: 0 0 5px 0; color: #000; text-transform: uppercase; }
+          .header p { margin: 2px 0; font-size: 12px; }
+          .meta-info { display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 11px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
           .meta-left { text-align: left; }
           .meta-right { text-align: right; }
-          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-          th { text-align: left; border-bottom: 2px solid #ddd; padding: 10px; font-weight: bold; text-transform: uppercase; font-size: 12px; }
-          td { border-bottom: 1px solid #eee; padding: 10px; vertical-align: top; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 15px; }
+          th { text-align: left; border-bottom: 2px solid #ddd; padding: 6px; font-weight: bold; text-transform: uppercase; font-size: 10px; }
+          td { border-bottom: 1px solid #eee; padding: 6px; vertical-align: top; }
           .text-right { text-align: right; }
-          .totals { margin-left: auto; width: 300px; }
-          .total-row { display: flex; justify-content: space-between; padding: 5px 0; }
-          .grand-total { font-weight: bold; font-size: 16px; border-top: 2px solid #000; margin-top: 10px; padding-top: 10px; }
-          .footer { text-align: center; margin-top: 50px; font-size: 12px; color: #777; border-top: 1px solid #eee; padding-top: 20px; }
-          .brand-logo { font-weight: bold; font-size: 18px; margin-bottom: 5px; }
+          .totals { margin-left: auto; width: 250px; }
+          .total-row { display: flex; justify-content: space-between; padding: 3px 0; }
+          .grand-total { font-weight: bold; font-size: 14px; border-top: 2px solid #000; margin-top: 8px; padding-top: 8px; }
+          .footer { text-align: center; margin-top: 30px; font-size: 10px; color: #777; border-top: 1px solid #eee; padding-top: 15px; }
+          .brand-logo { font-weight: bold; font-size: 16px; margin-bottom: 5px; }
         </style>
       </head>
       <body>
+        <div class="sales-order">Sales Order</div>
         <div class="header">
           <h1>${settings.company_name?.value || 'Go Tire POS'}</h1>
           <p>${settings.company_address?.value || ''}</p>
-          <p>Tel: ${settings.phone?.value || ''}</p>
+          <p>Tel: ${settings.phone?.value || '88212304'}</p>
         </div>
 
         <div class="meta-info">
@@ -477,7 +479,7 @@ const CashierDashboard = () => {
     const totals = calculateTotal();
     const paymentAmount = parseFloat(paymentReceived) || 0;
 
-    if (paymentMethod === 'cash' && !paymentReceived) {
+    if (paymentMethod === 'cash' && !isPartialPayment && !paymentReceived) {
       toast.error('Please enter amount received');
       return;
     }
@@ -605,12 +607,12 @@ const CashierDashboard = () => {
 
               {(user.role === 'admin' || adminOverride) && (
                 <div className="pos-override-panel">
-                  <h4 className="font-bold text-orange-800 mb-3 flex items-center gap-2">
+                  <h4 className="font-bold text-white mb-3 flex items-center gap-2">
                     🔓 {user.role === 'admin' ? 'Admin Pricing Controls' : 'Admin Override Active'}
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-orange-800 mb-1">Custom Price</label>
+                      <label className="block text-sm font-medium text-white mb-1">Custom Price</label>
                       <input
                         type="number"
                         step="0.01"
@@ -621,7 +623,7 @@ const CashierDashboard = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-orange-800 mb-1">Discount Type</label>
+                      <label className="block text-sm font-medium text-white mb-1">Discount Type</label>
                       <select
                         value={discountType}
                         onChange={(e) => {
@@ -635,7 +637,7 @@ const CashierDashboard = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-orange-800 mb-1">
+                      <label className="block text-sm font-medium text-white mb-1">
                         {discountType === 'percentage' ? 'Discount %' : 'Discount Amount (₱)'}
                       </label>
                       <input
@@ -892,11 +894,12 @@ const CashierDashboard = () => {
                 >
                   <option value="cash">Cash</option>
                   <option value="card">Card</option>
-                  <option value="digital">Digital Payment</option>
+                  <option value="gcash">GCash</option>
+                  <option value="bank_transfer">Bank Transfer</option>
                 </select>
               </div>
 
-              {paymentMethod === 'cash' && (
+              {paymentMethod === 'cash' && !isPartialPayment && (
                 <div className="form-group">
                   <label className="form-label">Amount Received</label>
                   <div className="flex items-center gap-2 mb-2">
