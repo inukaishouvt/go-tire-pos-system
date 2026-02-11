@@ -136,6 +136,7 @@ const AdminDashboard = () => {
 
   // Brands data
   const [brands, setBrands] = useState([]);
+  // eslint-disable-next-line no-unused-vars
   const [newBrand, setNewBrand] = useState('');
 
   // Date Range State
@@ -196,6 +197,7 @@ const AdminDashboard = () => {
     };
 
     loadInitialData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty dependency array - run once on mount
 
   // Apply user theme color
@@ -2557,88 +2559,6 @@ const AdminDashboard = () => {
     printWindow.onload = () => { printWindow.focus(); printWindow.print(); };
   };
 
-
-  const renderTransactionModals = () => (
-    <>
-      {/* Product Search Modal */}
-      {
-        showProductSearch && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
-              <div className="p-6 border-b flex justify-between items-center">
-                <h3 className="text-xl font-bold">Search Products</h3>
-                <button onClick={() => setShowProductSearch(false)}><X className="w-6 h-6" /></button>
-              </div>
-              <div className="p-6 border-b bg-gray-50">
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    type="text"
-                    autoFocus
-                    placeholder="Search by name, sku, brand..."
-                    value={checkoutSearchTerm}
-                    onChange={(e) => {
-                      setCheckoutSearchTerm(e.target.value);
-                      searchProducts(e.target.value);
-                    }}
-                    className="w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 text-lg"
-                  />
-                </div>
-              </div>
-              <div className="flex-1 overflow-y-auto p-6">
-                {searchResults.length === 0 ? (
-                  <div className="text-center text-gray-500 py-12">No products found</div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {searchResults.map(p => (
-                      <button
-                        key={p.id}
-                        onClick={() => { addToCart(p); setCheckoutSearchTerm(''); setShowProductSearch(false); }}
-                        className={`text-left p-4 border rounded-xl hover:border-blue-500 hover:shadow-md transition-all ${p.stock <= 0 ? 'opacity-50 bg-gray-50' : 'bg-white'}`}
-                        disabled={p.stock <= 0}
-                      >
-                        <h4 className="font-bold text-gray-900">{p.name}</h4>
-                        <div className="flex justify-between items-end mt-2">
-                          <div>
-                            <p className="text-sm text-gray-500">{p.brand}</p>
-                            <p className={`text-sm font-bold ${p.stock <= 5 ? 'text-red-500' : 'text-green-600'}`}>{p.stock} in stock</p>
-                          </div>
-                          <span className="text-lg font-bold text-blue-600">{formatCurrency(p.price)}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )
-      }
-
-      {/* Receipt Modal */}
-      {
-        showReceipt && lastSale && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Sale Completed!</h3>
-              <p className="text-gray-600 mb-6">Transaction #{lastSale.sale.id} successful</p>
-              <div className="flex gap-3 justify-center">
-                <button onClick={() => printReceipt()} className="px-6 py-3 bg-gray-800 text-white rounded-lg font-bold hover:bg-gray-900 flex items-center gap-2">
-                  <Printer className="w-5 h-5" /> Print Receipt
-                </button>
-                <button onClick={() => setShowReceipt(false)} className="px-6 py-3 border border-gray-300 rounded-lg font-bold hover:bg-gray-50">
-                  New Sale
-                </button>
-              </div>
-            </div>
-          </div>
-        )
-      }
-    </>
-  );
 
 
   const renderProductModal = () => (
