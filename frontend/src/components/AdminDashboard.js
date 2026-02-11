@@ -22,8 +22,8 @@ import {
   Search,
   ShoppingCart,
   Scan,
-  CheckCircle,
-  Printer
+  CheckCircle, // eslint-disable-line no-unused-vars
+  Printer // eslint-disable-line no-unused-vars
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
@@ -167,6 +167,7 @@ const AdminDashboard = () => {
   const [discountType, setDiscountType] = useState('percentage'); // 'percentage' or 'fixed'
   const [discountValue, setDiscountValue] = useState(0);
   const [isVatExempt, setIsVatExempt] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [showReceipt, setShowReceipt] = useState(false);
   const [lastSale, setLastSale] = useState(null);
   const barcodeInputRef = useRef(null);
@@ -2433,6 +2434,7 @@ const AdminDashboard = () => {
     </div>
   );
 
+  // eslint-disable-next-line no-unused-vars
   const printReceipt = () => {
     if (!lastSale) return;
 
