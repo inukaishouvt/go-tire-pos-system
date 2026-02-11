@@ -310,6 +310,17 @@ router.get('/', authenticateToken, requireCashier, async (req, res) => {
 
         const sales = await db.query(sql, params);
 
+        // Fetch items for each sale
+        const salesWithItems = await Promise.all(sales.map(async (sale) => {
+            const items = await db.query(`
+                SELECT si.*, p.name as product_name, p.brand, p.tire_size
+                FROM sale_items si
+                JOIN products p ON si.product_id = p.id
+                WHERE si.sale_id = ?
+            `, [sale.id]);
+            return { ...sale, items };
+        }));
+
         // Get total count for pagination
         let countSql = 'SELECT COUNT(*) as total FROM sales s WHERE 1=1';
         let countParams = [];
@@ -341,7 +352,7 @@ router.get('/', authenticateToken, requireCashier, async (req, res) => {
         const total = countResult.total;
 
         res.json({
-            sales,
+            sales: salesWithItems,
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
@@ -502,6 +513,19 @@ router.get('/reports/:period', authenticateToken, requireAdmin, async (req, res)
             return res.status(400).json({ error: 'Invalid period. Use: daily, weekly, monthly, or yearly' });
         }
 
+        const { start_date, end_date } = req.query;
+        let dateFilter = '';
+        let params = [];
+
+        if (start_date) {
+            dateFilter += ' AND DATE(created_at) >= ?';
+            params.push(start_date);
+        }
+        if (end_date) {
+            dateFilter += ' AND DATE(created_at) <= ?';
+            params.push(end_date);
+        }
+
         // Check for column existence for backward compatibility
         const hasVatAmount = await db.hasColumn('sales', 'vat_amount');
         const taxColumn = hasVatAmount ? 'vat_amount' : 'tax_amount';
@@ -518,11 +542,12 @@ router.get('/reports/:period', authenticateToken, requireAdmin, async (req, res)
                         SUM(${taxColumn}) as tax_collected,
                         SUM(discount_amount) as discounts_given,
                         AVG(total_amount) as avg_sale_amount
-                    FROM sales 
+                    FROM sales
+                    WHERE 1=1 ${dateFilter} 
                     GROUP BY DATE(created_at)
                     ORDER BY period DESC
                     LIMIT 50
-                `);
+                `, params);
             } else if (period === 'weekly') {
                 salesData = await db.query(`
                     SELECT 
@@ -532,11 +557,12 @@ router.get('/reports/:period', authenticateToken, requireAdmin, async (req, res)
                         SUM(${taxColumn}) as tax_collected,
                         SUM(discount_amount) as discounts_given,
                         AVG(total_amount) as avg_sale_amount
-                    FROM sales 
+                    FROM sales
+                    WHERE 1=1 ${dateFilter} 
                     GROUP BY strftime('%Y-W%W', created_at)
                     ORDER BY period DESC
                     LIMIT 50
-                `);
+                `, params);
             } else if (period === 'monthly') {
                 salesData = await db.query(`
                     SELECT 
@@ -547,10 +573,11 @@ router.get('/reports/:period', authenticateToken, requireAdmin, async (req, res)
                         SUM(discount_amount) as discounts_given,
                         AVG(total_amount) as avg_sale_amount
                     FROM sales 
+                    WHERE 1=1 ${dateFilter}
                     GROUP BY strftime('%Y-%m', created_at)
                     ORDER BY period DESC
                     LIMIT 50
-                `);
+                `, params);
             } else if (period === 'yearly') {
                 salesData = await db.query(`
                     SELECT 
@@ -561,10 +588,11 @@ router.get('/reports/:period', authenticateToken, requireAdmin, async (req, res)
                         SUM(discount_amount) as discounts_given,
                         AVG(total_amount) as avg_sale_amount
                     FROM sales 
+                    WHERE 1=1 ${dateFilter}
                     GROUP BY strftime('%Y', created_at)
                     ORDER BY period DESC
                     LIMIT 50
-                `);
+                `, params);
             }
         } catch (queryError) {
             console.error('Sales data query error:', queryError);
@@ -699,7 +727,7 @@ router.get('/pending', authenticateToken, requireCashier, async (req, res) => {
             FROM sales s
             JOIN users u ON s.cashier_id = u.id
             LEFT JOIN customers c ON s.customer_id = c.id
-            WHERE s.status = 'pending'
+            WHERE s.status = 'pending' AND (s.total_amount - s.amount_paid) > 0.01
         `;
         let params = [];
 
@@ -712,7 +740,19 @@ router.get('/pending', authenticateToken, requireCashier, async (req, res) => {
         sql += ' ORDER BY s.created_at DESC';
 
         const pendingSales = await db.query(sql, params);
-        res.json(pendingSales);
+
+        // Fetch items for each pending sale
+        const salesWithItems = await Promise.all(pendingSales.map(async (sale) => {
+            const items = await db.query(`
+                SELECT si.*, p.name as product_name, p.brand, p.tire_size
+                FROM sale_items si
+                JOIN products p ON si.product_id = p.id
+                WHERE si.sale_id = ?
+            `, [sale.id]);
+            return { ...sale, items };
+        }));
+
+        res.json(salesWithItems);
     } catch (error) {
         console.error('Get pending sales error:', error);
         res.status(500).json({ error: 'Internal server error' });

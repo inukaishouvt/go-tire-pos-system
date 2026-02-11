@@ -50,7 +50,7 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
         const totalAmount = parseFloat(sale.total_amount || 0);
 
         // Allow slight float precision tolerance
-        if (newPaid > (totalAmount + 0.01)) {
+        if (newPaid > (totalAmount + 0.05)) {
             return res.status(400).json({
                 error: `Payment amount exceeds balance. Balance due: ${(totalAmount - currentPaid).toFixed(2)}`
             });

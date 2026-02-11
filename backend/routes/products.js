@@ -7,7 +7,7 @@ const router = express.Router();
 // Get all products (with optional search and pagination)
 router.get('/', authenticateToken, requireCashier, async (req, res) => {
     try {
-        const { search, page = 1, limit = 50 } = req.query;
+        const { search, category, page = 1, limit = 50 } = req.query;
         const offset = (page - 1) * limit;
 
         const db = new Database();
@@ -18,6 +18,11 @@ router.get('/', authenticateToken, requireCashier, async (req, res) => {
             sql += ' AND (name LIKE ? OR sku LIKE ? OR barcode LIKE ? OR category LIKE ? OR brand LIKE ?)';
             const searchTerm = `%${search}%`;
             params.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+        }
+
+        if (category) {
+            sql += ' AND category = ?';
+            params.push(category);
         }
 
         sql += ' ORDER BY name LIMIT ? OFFSET ?';
@@ -32,6 +37,11 @@ router.get('/', authenticateToken, requireCashier, async (req, res) => {
             countSql += ' AND (name LIKE ? OR sku LIKE ? OR barcode LIKE ? OR category LIKE ? OR brand LIKE ?)';
             const searchTerm = `%${search}%`;
             countParams.push(searchTerm, searchTerm, searchTerm, searchTerm, searchTerm);
+        }
+
+        if (category) {
+            countSql += ' AND category = ?';
+            countParams.push(category);
         }
 
         const countResult = await db.get(countSql, countParams);
