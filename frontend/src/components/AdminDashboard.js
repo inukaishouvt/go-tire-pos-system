@@ -164,6 +164,8 @@ const AdminDashboard = () => {
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [paymentReceived, setPaymentReceived] = useState('');
+  const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [discountType, setDiscountType] = useState('percentage'); // 'percentage' or 'fixed'
   const [discountValue, setDiscountValue] = useState(0);
   const [isVatExempt, setIsVatExempt] = useState(false);
@@ -691,9 +693,8 @@ const AdminDashboard = () => {
   const handleUpdateThemeColor = async (color) => {
     try {
       await axios.patch('/api/users/theme-color', { theme_color: color });
-      toast.success('Theme color updated');
-      // Update local state if needed or reload
-      window.location.reload();
+      document.documentElement.style.setProperty('--theme-color', color);
+      toast.success('Theme color updated!');
     } catch (error) {
       toast.error('Failed to update theme color');
     }
@@ -956,16 +957,53 @@ const AdminDashboard = () => {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Customer</label>
             <div className="flex gap-2">
-              <select
-                value={selectedCustomerId}
-                onChange={(e) => setSelectedCustomerId(e.target.value)}
-                className="flex-1 w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
-              >
-                <option value="">Select Customer</option>
-                {customers.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
+              <div className="flex-1 relative">
+                <input
+                  type="text"
+                  placeholder="Search customer by name..."
+                  value={customerSearchTerm}
+                  onChange={(e) => {
+                    setCustomerSearchTerm(e.target.value);
+                    setShowCustomerDropdown(true);
+                    if (!e.target.value) {
+                      setSelectedCustomerId('');
+                    }
+                  }}
+                  onFocus={() => setShowCustomerDropdown(true)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {showCustomerDropdown && (
+                  <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                    {customers
+                      .filter(c =>
+                        c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+                        (c.phone && c.phone.includes(customerSearchTerm))
+                      )
+                      .map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedCustomerId(c.id.toString());
+                            setCustomerSearchTerm(c.name);
+                            setShowCustomerDropdown(false);
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${selectedCustomerId === c.id.toString() ? 'bg-blue-100 font-medium' : ''
+                            }`}
+                        >
+                          <span className="font-medium">{c.name}</span>
+                          {c.phone && <span className="text-gray-400 ml-2 text-xs">({c.phone})</span>}
+                        </button>
+                      ))}
+                    {customers.filter(c =>
+                      c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+                      (c.phone && c.phone.includes(customerSearchTerm))
+                    ).length === 0 && (
+                        <div className="px-3 py-2 text-sm text-gray-400">No customers found</div>
+                      )}
+                  </div>
+                )}
+              </div>
               <button onClick={() => openCustomerModal()} className="p-2 border rounded-lg hover:bg-gray-50"><Plus className="w-5 h-5" /></button>
             </div>
           </div>
@@ -1001,26 +1039,6 @@ const AdminDashboard = () => {
                 <p className="text-xs text-blue-700 mt-1 font-bold">
                   Balance: {formatCurrency(parseFloat(calculateTotal().total) - (parseFloat(amountPaid) || 0))}
                 </p>
-              </div>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="text-gray-500 font-bold">₱</span>
-                </div>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={paymentReceived}
-                  onChange={(e) => setPaymentReceived(e.target.value)}
-                  className="pl-8 w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold text-lg"
-                  placeholder="0.00"
-                />
-                <button
-                  onClick={() => setPaymentReceived(calculateTotal().total.toFixed(2))}
-                  className="absolute inset-y-0 right-0 px-3 py-1 m-1 text-xs font-bold text-blue-600 bg-blue-50 rounded hover:bg-blue-100"
-                >
-                  Exact Amount
-                </button>
               </div>
               <div>
                 <label className="block text-sm font-medium text-blue-900 mb-1">
@@ -1313,7 +1331,9 @@ const AdminDashboard = () => {
     );
 
     // Pending orders
-    const pendingOrders = salesHistory.filter(sale => sale.status === 'pending');
+    const pendingOrders = salesHistory.filter(sale =>
+      sale.status === 'pending' && (sale.total_amount - sale.amount_paid) > 0.01
+    );
 
     return { dailySales: last7Days, topProducts, lowStockProducts, pendingOrders };
   };
@@ -2815,11 +2835,35 @@ const AdminDashboard = () => {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data (JSON or CSV)
+              Upload CSV or JSON File
+            </label>
+            <input
+              type="file"
+              accept=".csv,.json,.txt"
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                  setImportData(ev.target.result);
+                  toast.success(`File "${file.name}" loaded (${(file.size / 1024).toFixed(1)} KB)`);
+                };
+                reader.onerror = () => toast.error('Failed to read file');
+                reader.readAsText(file);
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Or Paste Data (JSON or CSV)
             </label>
             <textarea
               value={importData}
               onChange={(e) => setImportData(e.target.value)}
+              rows={8}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:ring-2 focus:ring-blue-500"
+              placeholder="Paste your CSV or JSON data here..."
             />
           </div>
         </div>

@@ -137,9 +137,10 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
 
                 // Get complete sale data for response
                 const sale = await db.get(`
-                    SELECT s.*, u.full_name as cashier_name 
+                    SELECT s.*, u.full_name as cashier_name, c.name as customer_name 
                     FROM sales s 
                     JOIN users u ON s.cashier_id = u.id 
+                    LEFT JOIN customers c ON s.customer_id = c.id 
                     WHERE s.id = ?
                 `, [sale_id]);
 
@@ -221,9 +222,10 @@ router.post('/', authenticateToken, requireCashier, async (req, res) => {
 
                     // Get complete sale data for response
                     const sale = await db.get(`
-                        SELECT s.*, u.full_name as cashier_name 
+                        SELECT s.*, u.full_name as cashier_name, c.name as customer_name 
                         FROM sales s 
                         JOIN users u ON s.cashier_id = u.id 
+                        LEFT JOIN customers c ON s.customer_id = c.id 
                         WHERE s.id = ?
                     `, [sale_id]);
 

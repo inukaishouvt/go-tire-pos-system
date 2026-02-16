@@ -49,6 +49,7 @@ const CashierDashboard = () => {
   const [customers, setCustomers] = useState([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [customerSearchTerm, setCustomerSearchTerm] = useState('');
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [isPartialPayment, setIsPartialPayment] = useState(false);
   const [amountPaid, setAmountPaid] = useState('');
   const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
@@ -940,29 +941,54 @@ const CashierDashboard = () => {
                   Customer *
                 </label>
                 <div className="flex gap-2">
-                  <div className="flex-1">
+                  <div className="flex-1 relative">
                     <input
                       type="text"
-                      placeholder="Search customer..."
+                      placeholder="Search customer by name or phone..."
                       value={customerSearchTerm}
-                      onChange={(e) => setCustomerSearchTerm(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      onChange={(e) => {
+                        setCustomerSearchTerm(e.target.value);
+                        setShowCustomerDropdown(true);
+                        if (!e.target.value) {
+                          setSelectedCustomerId('');
+                        }
+                      }}
+                      onFocus={() => setShowCustomerDropdown(true)}
+                      onBlur={() => setTimeout(() => setShowCustomerDropdown(false), 200)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
-                    <select
-                      value={selectedCustomerId}
-                      onChange={(e) => setSelectedCustomerId(e.target.value)}
-                      className="form-input w-full"
-                    >
-                      <option value="">Select Customer (Required)</option>
-                      {customers
-                        .filter(c =>
+                    {showCustomerDropdown && (
+                      <div className="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {customers
+                          .filter(c =>
+                            c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
+                            (c.phone && c.phone.includes(customerSearchTerm))
+                          )
+                          .map(c => (
+                            <button
+                              key={c.id}
+                              type="button"
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                setSelectedCustomerId(c.id.toString());
+                                setCustomerSearchTerm(c.name);
+                                setShowCustomerDropdown(false);
+                              }}
+                              className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 transition-colors ${selectedCustomerId === c.id.toString() ? 'bg-blue-100 font-medium' : ''
+                                }`}
+                            >
+                              <span className="font-medium">{c.name}</span>
+                              {c.phone && <span className="text-gray-400 ml-2 text-xs">({c.phone})</span>}
+                            </button>
+                          ))}
+                        {customers.filter(c =>
                           c.name.toLowerCase().includes(customerSearchTerm.toLowerCase()) ||
                           (c.phone && c.phone.includes(customerSearchTerm))
-                        )
-                        .map(c => (
-                          <option key={c.id} value={c.id}>{c.name} ({c.phone || 'No phone'})</option>
-                        ))}
-                    </select>
+                        ).length === 0 && (
+                            <div className="px-3 py-2 text-sm text-gray-400">No customers found</div>
+                          )}
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"
