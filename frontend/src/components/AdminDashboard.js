@@ -28,7 +28,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
 const AdminDashboard = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -694,6 +694,7 @@ const AdminDashboard = () => {
     try {
       await axios.patch('/api/users/theme-color', { theme_color: color });
       document.documentElement.style.setProperty('--theme-color', color);
+      updateUser({ theme_color: color });
       toast.success('Theme color updated!');
     } catch (error) {
       toast.error('Failed to update theme color');

@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData);
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem('user');
       }
     }
-    
+
     setLoading(false);
   }, []);
 
@@ -55,12 +55,12 @@ export const AuthProvider = ({ children }) => {
       // Store token and user data
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
-      
+
       // Set axios default header
       axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      
+
       setUser(userData);
-      
+
       return { success: true };
     } catch (error) {
       const message = error.response?.data?.error || 'Login failed';
@@ -88,12 +88,19 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = (updates) => {
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   const value = {
     user,
     loading,
     login,
     logout,
-    changePassword
+    changePassword,
+    updateUser
   };
 
   return (
