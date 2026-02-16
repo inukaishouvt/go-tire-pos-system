@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --theme-color: #dc2626;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -51,12 +55,13 @@ code {
 }
 
 .btn-primary {
-  background-color: #dc2626;
+  background-color: var(--theme-color, #dc2626);
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #b91c1c;
+  background-color: var(--theme-color, #dc2626);
+  filter: brightness(0.85);
 }
 
 .btn-secondary {
@@ -119,8 +124,8 @@ code {
 
 .form-input:focus {
   outline: none;
-  border-color: #dc2626;
-  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+  border-color: var(--theme-color, #dc2626);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-color, #dc2626) 10%, transparent);
 }
 
 .form-select {
@@ -282,7 +287,7 @@ code {
 }
 
 .text-red-600 {
-  color: #dc2626;
+  color: var(--theme-color, #dc2626);
 }
 
 .bg-green-100 {
@@ -350,7 +355,7 @@ code {
 /* Loading spinner */
 .spinner {
   border: 2px solid #f3f3f3;
-  border-top: 2px solid #dc2626;
+  border-top: 2px solid var(--theme-color, #dc2626);
   border-radius: 50%;
   width: 20px;
   height: 20px;

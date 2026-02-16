@@ -2902,7 +2902,7 @@ const AdminDashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 mx-auto mb-4" style={{ borderColor: user?.theme_color || '#dc2626' }}></div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Loading Dashboard</h2>
           <p className="text-gray-600">Fetching your data...</p>
         </div>
@@ -3052,9 +3052,9 @@ const AdminDashboard = () => {
       {/* Sidebar */}
       <div className="w-72 flex-shrink-0 bg-gradient-to-b from-gray-900 to-gray-800 shadow-2xl border-r border-gray-700 sticky top-0 h-screen flex flex-col">
         <div className="p-8">
-          <div className="bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-6 text-white">
+          <div className="rounded-2xl p-6 text-white" style={{ background: `linear-gradient(135deg, ${user?.theme_color || '#dc2626'}, ${user?.theme_color || '#dc2626'}dd)` }}>
             <h1 className="text-2xl font-bold mb-2">{settings.company_name?.value || 'Go Tire Car Care Center'} Admin</h1>
-            <p className="text-red-100 text-sm">Welcome back, {user?.username}</p>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.8)' }}>Welcome back, {user?.username}</p>
           </div>
         </div>
 
