@@ -671,11 +671,11 @@ const CashierDashboard = () => {
                 </div>
               )}
               {user.role === 'cashier' && !adminOverride && (
-                <div className="pos-override-panel bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-                  <h4 className="font-bold text-yellow-900 mb-2 flex items-center gap-2">
+                <div className="p-3 rounded-lg border border-yellow-400" style={{ background: 'linear-gradient(135deg, #b45309 0%, #92400e 100%)' }}>
+                  <h4 className="font-bold text-white mb-2 flex items-center gap-2">
                     🔒 Cashier Account
                   </h4>
-                  <p className="text-sm text-yellow-800 font-medium mb-3">
+                  <p className="text-sm text-white font-medium mb-3">
                     Price editing and discounts are restricted.
                   </p>
                   <button

@@ -27,6 +27,56 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
 
+// Robust CSV parser that handles quoted fields, escaped quotes (""),
+// and commas / newlines inside quoted values (RFC 4180 style).
+const parseCSV = (text) => {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+
+    if (inQuotes) {
+      if (char === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += char;
+      }
+    } else if (char === '"') {
+      inQuotes = true;
+    } else if (char === ',') {
+      row.push(field);
+      field = '';
+    } else if (char === '\n') {
+      row.push(field);
+      field = '';
+      if (row.some(cell => cell.trim() !== '')) {
+        rows.push(row);
+      }
+      row = [];
+    } else if (char === '\r') {
+      // skip carriage return
+    } else {
+      field += char;
+    }
+  }
+
+  // Handle last line without trailing newline
+  row.push(field);
+  if (row.some(cell => cell.trim() !== '')) {
+    rows.push(row);
+  }
+
+  return rows;
+};
+
 const AdminDashboard = () => {
   const { user, logout, updateUser } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -708,9 +758,13 @@ const AdminDashboard = () => {
 
       // Check if input looks like CSV (contains commas and newlines)
       if (importData.includes(',') && importData.includes('\n')) {
-        // Rudimentary CSV Parser
-        const lines = importData.trim().split('\n');
-        const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+        // Robust CSV parser that handles quoted fields (e.g. Aronium exports)
+        const lines = parseCSV(importData);
+        if (lines.length === 0) {
+          throw new Error('CSV is empty');
+        }
+
+        const headers = lines[0].map(h => h.trim().toLowerCase());
 
         // Map CSV headers to API fields
         const fieldMap = {
@@ -721,27 +775,30 @@ const AdminDashboard = () => {
           'sku': 'sku',
           'brand': 'brand',
           'category': 'category',
+          'productgroup': 'category',
+          'product group': 'category',
+          'group': 'category',
           'price': 'price',
           'cost': 'cost',
           'stock': 'stock',
+          'quantity': 'stock',
           'tire_size': 'tire_size',
-          'tire size': 'tire_size'
+          'tire size': 'tire_size',
+          'description': 'description'
         };
 
         for (let i = 1; i < lines.length; i++) {
-          if (!lines[i].trim()) continue;
+          const values = lines[i];
 
-          const values = lines[i].split(',');
           const product = {};
-
           headers.forEach((header, index) => {
             const mappedField = fieldMap[header] || header;
-            if (values[index]) {
+            if (values[index] !== undefined && values[index] !== null) {
               product[mappedField] = values[index].trim();
             }
           });
 
-          if (product.name && product.price) {
+          if (product.name && product.price !== undefined && product.price !== '') {
             productsToImport.push({
               ...product,
               stock: parseInt(product.stock) || 0,
@@ -2820,8 +2877,9 @@ const AdminDashboard = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="font-bold mb-1">Format Requirement:</p>
-                <p>Supports JSON array or CSV format.</p>
-                <p className="mt-1"><strong>CSV Headers:</strong> name, sku, price, cost, stock, min_stock, category, brand, tire_size, description</p>
+                <p>Supports JSON array or CSV format (including Aronium POS exports).</p>
+                <p className="mt-1"><strong>CSV Headers:</strong> name, sku, price, cost, stock, category, brand, tire_size, description</p>
+                <p className="mt-1"><strong>Aronium export headers</strong> are also recognized: Name, ProductGroup (maps to category), SKU, Barcode, Price, Quantity (maps to stock).</p>
               </div>
               <button
                 onClick={downloadCSVTemplate}
@@ -2832,6 +2890,9 @@ const AdminDashboard = () => {
             </div>
             <pre className="mt-2 text-xs overflow-x-auto bg-white p-2 border rounded">
               {"Example CSV:\nSample Tire,TIRE-001,1500,1000,10,5,Passenger Tires,Michelin,225/65/17,Description"}
+            </pre>
+            <pre className="mt-2 text-xs overflow-x-auto bg-white p-2 border rounded text-blue-700">
+              {"Aronium Example:\nName,ProductGroup,SKU,Barcode,Price,Quantity\nWanli 175/65R14 82T SP118,PCR TIRES/Wanli/Wanli/R14,1,,1850,18"}
             </pre>
           </div>
           <div>
