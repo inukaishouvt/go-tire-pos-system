@@ -671,7 +671,7 @@ const CashierDashboard = () => {
                 </div>
               )}
               {user.role === 'cashier' && !adminOverride && (
-                <div className="p-3 rounded-lg border border-yellow-400" style={{ background: 'linear-gradient(135deg, #b45309 0%, #92400e 100%)' }}>
+                <div className="pos-override-panel bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
                   <h4 className="font-bold text-white mb-2 flex items-center gap-2">
                     🔒 Cashier Account
                   </h4>
